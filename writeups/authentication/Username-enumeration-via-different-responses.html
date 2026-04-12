@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication Vulnerability</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Easy</p>
+        <h2 class="section-title">Mindset & Strategy</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/q_auto/f_auto/v1775985473/E8E03A0C-8BB5-4A8D-BAC7-6008E3390C4B_l00dw3.png">
+            <div>
+                <p>When approaching a login page, your first goal is to observe how the server
+                    communicates. In this
+                    lab, the objective was to determine if the application reveals too much information about its users.
+                    By submitting random credentials, we checked if the error messages were specific (e.g., "Invalid
+                    password" vs. "Invalid username").
+
+                    Since the application did not implement rate limiting (account lockout or IP blocking), it allowed
+                    us to use Brute Force techniques. By identifying a unique error message for a valid username, we
+                    could narrow down our target and eventually find the correct password.</p>
+            </div>
+        </div>
+
+        <!-- STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1775982530/Screenshot_2026-04-12_13_07_03_oxyjby.png">
+            <div>
+
+                <h2 class="section-title">step-by-step-Execution</h2>
+
+                <h3>1. Intercept the Request:</h3>
+                <p>With Burp Suite running, attempt a login with dummy credentials. Capture the POST /login request and
+                    send it to Repeater to analyze the server's behavior.</p>
+
+                <p>2. Identify the Vulnerability: Notice that the error message changes depending on whether the
+                    username exists. We will exploit this using Intruder.</p>
+
+                <h3>3. Username Enumeration:</h3>
+                <p>Send the request to Intruder and set the payload position on the username parameter.</p>
+
+                <p>In the Payloads tab, paste the username list provided in the lab description.</p>
+
+            </div>
+        </div>
+
+        <!-- PROOF IMAGE BLOCK -->
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1775982530/Screenshot_2026-04-12_13_07_33_xwkwcy.png">
+            <div>
+                <p>Launch the attack and sort the results by length. A response with a different length indicates a
+                    valid username (likely because the error message changed from "Invalid username" to "Invalid
+                    password").</p>
+            </div>
+        </div>
+
+        <!-- FINAL STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1775982538/Screenshot_2026-04-12_13_07_59_w5um8d.png">
+            <div>
+
+                <h3>4. Password Brute Force:</h3>
+                <p>Take the identified valid username and go back to the Positions tab.</p>
+
+                <p>Fix the username parameter to the valid one you found and set the papayload position on the password
+                    parameter.</p>
+
+                <p>Paste the password list into the Payloads configuration.</p>
+
+                <h3>5. Final Exploitation:</h3>
+
+                <p>Start the attack and again sort by Length or Status Code (look for a 302 Found or a different
+                    response length).</p>
+
+                <p>Once you find the correct credential, right-click the request and select "Show response in browser"
+                    or manually log in.</p>
+
+
+            </div>
+        </div>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1775982521/Screenshot_2026-04-12_13_08_32_qwg0sv.png">
+            <div>
+                <p>Once you find the correct credential, right-click the request and select "Show response in browser"
+                    or manually log in.</p>
+                <p>Result: Lab successfully solved.</p>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active"); // 🔥 IMPORTANT
+                }
+            });
+        }
+
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        document.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", function (e) {
+                const href = this.getAttribute("href");
+
+                if (href && !href.startsWith("#")) {
+                    e.preventDefault();
+
+                    document.body.classList.add("fade-out");
+
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 400);
+                }
+            });
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Username enumeration via different responses";
+        let i = 0;
+
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>

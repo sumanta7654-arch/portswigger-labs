@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Writeups</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+        </ul>
+    </nav>
+    <input type="text" id="search" placeholder="Search writeups...">
+    <section class="writeups">
+        <h2>All Writeups</h2>
+        <div id="writeup-list" class="card-container"></div>
+    </section>
+    <div class="card-container">
+
+    <!-- Authentication -->
+    <h2>Authentication</h2>
+
+    <div class="card reveal">
+        <h3>Username Enumeration Via Different Responses</h3>
+        <p>Different response based username discovery</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
+    </div>
+    <div class="card">
+        <h3>Username Enumeration Via Different Responses</h3>
+        <p>Different response based username discovery</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
+    </div>
+    <div class="card">
+        <h3>Username Enumeration Via Different Responses</h3>
+        <p>Different response based username discovery</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
+    </div>
+    <div class="card">
+        <h3>Username Enumeration Via Different Responses</h3>
+        <p>Different response based username discovery</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
+    </div>
+    <div class="card">
+        <h3>Username Enumeration Via Different Responses</h3>
+        <p>Different response based username discovery</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
+    </div>
+
+    <!-- Access Control -->
+    <h2>Access Control</h2>
+
+    <div class="card">
+        <h3>IDOR Vulnerability</h3>
+        <p>Access other user data by changing ID</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/IDOR/idor.html">Read More →</a>
+    </div>
+
+    <!-- XSS -->
+    <h2>XSS</h2>
+
+    <div class="card">
+        <h3>Reflected XSS</h3>
+        <p>Basic XSS attack using input reflection</p>
+        <span class="tag">Easy</span>
+        <a href="writeups/xss.html">Read More →</a>
+    </div>
+
+</div>
+</body>
+
+</html>
+<script>
+function revealOnScroll() {
+    const reveals = document.querySelectorAll(".reveal");
+
+    reveals.forEach((el) => {
+        const windowHeight = window.innerHeight;
+        const elementTop = el.getBoundingClientRect().top;
+
+        if (elementTop < windowHeight - 80) {
+            el.classList.add("active");
+        }
+    });
+}
+
+window.addEventListener("scroll", revealOnScroll);
+</script>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sumanta | Red Team Journey</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="writeups.html">Writeups</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Hi, I'm <span id="typing"></span></h1>
+        <p>Aspiring Red Teamer | Web Security Learner</p>
+
+        <div class="buttons">
+            <a href="writeups.html" class="btn">View Writeups</a>
+            <a href="#" class="btn-outline">My Journey</a>
+        </div>
+    </section>
+    <!-- Writeups Section -->
+    <section class="writeups reveal"></section>
+      <h2>Latest Writeups</h2>
+
+      <div class="card-container">
+
+        <!-- Card 1 -->
+        <div class="card">
+            <h3>IDOR Lab</h3>
+            <p>Broken access control using IDOR vulnerability.</p>
+            <span class="tag">Easy</span>
+            <a href="writeups/IDOR/idor.html">Read More →</a>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card">
+            <h3>Auth Bypass</h3>
+            <p>Login bypass using flawed session validation.</p>
+            <span class="tag">Medium</span>
+            <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card">
+            <h3>XSS Attack</h3>
+            <p>Forging requests using victim session.</p>
+            <span class="tag">Medium</span>
+            <a href="writeups/XSS/xss.html">Read More →</a>
+        </div>
+
+    </div>
+    </section>
+    <section class="terminal">
+        <p id="terminal-text"></p>
+    </section>
+    <script src="script.js"></script>
+</body>
+
+</html>
