@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Easy</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776099322/Screenshot_2026-04-13_22_23_39_lvxygx.png">
+            <div>
+                <p> This lab's two-factor authentication can be bypassed. You have already obtained a valid username and
+                    password, but do not have access to the user's 2FA verification code. To solve the lab, access
+                    Carlos's account page.
+                </p>
+                <P>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Your credentials: wiener:peter</P>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Victim's credentials carlos:montoya</p>
+            </div>
+        </div>
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <!-- STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776100055/Screenshot_2026-04-13_22_36_41_hn8cqw.png">
+            <div>
+
+
+
+
+                <p>In a secure environment, authentication should be a strict, multi-step process where Step B (2FA)
+                    cannot be completed without Step A (Username/Password), and the final session is only granted after
+                    both are verified.</p>
+
+                <p>Our strategy here is to test the State Management of the login flow. We want to see if the
+                    application "remembers" that we are partially authenticated after entering the password and if it
+                    incorrectly grants access to the user's dashboard if we simply skip the 2FA URL. If the backend
+                    assumes that reaching the /my-account page is proof of identity without verifying the 2FA
+                    completion, the entire security layer is bypassed.</p>
+
+            </div>
+        </div>
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <!-- PROOF IMAGE BLOCK -->
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776100171/Screenshot_2026-04-13_22_38_10_pgx4uy.png">
+            <div>
+                <p>1. Analyze the Flow: Open the lab and log in with the victim's credentials (carlos:montoya).</p>
+                <p>2. Observe the URL: After submitting the password, you are redirected to the 2FA entry page (e.g.,
+                    /login2). At this point, do not enter a code.</p>
+                <p>3. Test the Bypass: Instead of completing the 2FA, manually change the URL in your browser’s address
+                    bar to /my-account (or simply click the "Home" or "Account" link if available).
+                </p>
+                <p>4. Verify Access: Because the backend has already created a session for "carlos" after the password
+                    check and fails to verify if the 2FA was successful, you will find yourself logged into his account.
+                </p>
+                <p>5. Result: The 2FA step is completely bypassed, and the lab is solved.</p>
+            </div>
+        </div>
+        <h2 class="section-title">Technical Explanation</h2>
+        <!-- FINAL STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776100174/Screenshot_2026-04-13_22_38_25_smffzl.png">
+            <div>
+
+                <p>The vulnerability lies in Incomplete Session Validation. The application logic is flawed because it
+                    treats the "Logged In" state as a single boolean (True/False) based only on the first factor.</p>
+                <p>In a vulnerable system:</p>
+
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Input Password -> Session set to "Authorized".
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Redirect to 2FA -> User is expected to go here, but the session
+                    is already active..
+                </p>
+                <p>In a secure system:</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Input Password -> Session set to "Pre-Auth" (Limited access).
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Input 2FA -> Session upgraded to "Fully-Auth" (Full access).
+                </p>
+
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">Conclusion</h2>
+                <p>A 2FA system is only as strong as its enforcement. If the second factor is merely a "suggestion" in
+                    the UI rather than a mandatory check in the backend, it provides zero additional security. This lab
+                    reminds us that as security researchers, we should always try to "jump" or "skip" steps in a logical
+                    process to see how the server reacts.
+                </p>
+            </div>
+        </div>
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mandatory Step Verification: The server must check the user's
+                    authentication status at every sensitive endpoint. Access to /my-account should be denied unless a
+                    "2FA_Verified" flag is present in the session.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;State-Based Authentication: Use a multi-stage authentication
+                    state. Users should remain in a "restricted" state where they can only access the 2FA submission
+                    page until the correct code is provided.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Session Revocation: If a user tries to access protected
+                    resources before completing 2FA, the system should ideally terminate the partial session and force a
+                    re-login.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active"); // 🔥 IMPORTANT
+                }
+            });
+        }
+
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        document.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", function (e) {
+                const href = this.getAttribute("href");
+
+                if (href && !href.startsWith("#")) {
+                    e.preventDefault();
+
+                    document.body.classList.add("fade-out");
+
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 400);
+                }
+            });
+        });
+    </script>
+    <script>
+        const titleText = "Lab: 2FA simple bypass";
+        let i = 0;
+
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>
