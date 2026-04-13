@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cross Site Scripting</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Cross Site Scripting | Medium</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776084927/Screenshot_2026-04-13_18_10_05_a7ie9y.png">
+            <div>
+                <p> This lab contains a reflected cross-site scripting vulnerability in the search query tracking
+                    functionality.</p>
+                <P>The reflection occurs inside a JavaScript string with single quotes and backslashes escaped.</P>
+                <p>To solve this lab, perform a cross-site scripting attack that breaks out of the JavaScript string and
+                    calls the alert function.</p>
+            </div>
+        </div>
+
+        <!-- STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776085580/Screenshot_2026-04-13_18_34_34_q50dyp.png">
+            <div>
+
+                <h2 class="section-title">Mindset & Strategy</h2>
+
+
+                <p>When testing for XSS, our primary goal is to break out of the intended data context and execute
+                    arbitrary JavaScript. In this scenario, the application is performing some sanitization.
+                    If we try to use a single quote (') to break the string, the backend escapes it into \'. Similarly,
+                    a backslash (\) becomes \\.</p>
+
+                <p>Since the application effectively prevents us from escaping the JavaScript string itself,
+                    we need to shift our perspective. Instead of trying to manipulate the logic within the
+                    &lt;script&gt; tag, why not try to end the script block entirely? If we can force the browser
+                    to close the current script tag, we can then start a fresh one where no escaping rules apply to our
+                    payload.</p>
+
+            </div>
+        </div>
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <!-- PROOF IMAGE BLOCK -->
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776084937/Screenshot_2026-04-13_18_09_51_mfj3dw.png">
+            <div>
+                <p>1. Analyze the Reflection: Open the lab and perform a test search (e.g., test123). Right-click on the
+                    page, select "View Page Source", and find where your input is reflected. You will notice it sits
+                    inside a JavaScript variable within &lt;script&gt; tags.</p>
+                <p>2. Test the Filters: Try searching for ' or \. You will see that the application automatically adds a
+                    backslash to escape them, making standard payloads like '';alert(1)// useless.</p>
+                <p>3. The Breaking Point: Since we cannot break the string, we will target the HTML tag. In the search
+                    bar,
+                    enter the following payload:
+                    &lt;/script&gt;
+                    &lt;script&gt;alert("hacked")&lt;/script&gt;
+                </p>
+                <p>4. Execute: Click search. The browser will interpret &lt;/script&gt; as the end of the original
+                    script, and
+                    immediately execute our new
+                    &lt;script&gt; block.</p>
+                <p>5. Result: An alert box pops up with "hacked," and the lab is successfully solved.</p>
+            </div>
+        </div>
+        <h2 class="section-title">Technical Explanation</h2>
+        <!-- FINAL STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776084862/Screenshot_2026-04-13_18_11_05_rafdbv.png">
+            <div>
+
+                <p>The vulnerability exists because the application only filters characters that could break a
+                    JavaScript string (like quotes and backslashes) but fails to filter HTML tags.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/script&gt;: This tells the browser's HTML parser that the
+                    current script section is finished.</p>
+
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    &lt;script&gt;alert("hacked")&lt;/script&gt;: This is a completely new, independent script. Because
+                    the browser
+                    has already "exited" the previous filtered context, it executes this new block without any escaping
+                    issues.
+                </p>
+
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">Conclusion</h2>
+                <p>This lab teaches us an important lesson in web security: context matters. A developer might spend a
+                    lot of time securing a JavaScript string, but if they forget to validate the input against the
+                    broader HTML context, the application remains vulnerable. Effective defense requires looking at the
+                    entire environment where user input is rendered, not just the immediate variable it is assigned to.
+                </p>
+            </div>
+        </div>
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>To prevent this type of Reflected XSS, developers should implement the following:</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTML Encoding: All user-supplied data should be HTML-encoded
+                    before being rendered on the page. This would convert &lt; into &amp;lt; and&gt; into &amp;gt;,
+                    making the browser
+                    treat them as harmless text instead of executable tags.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Input Validation: Use a "whitelist" approach to only allow
+                    expected characters in the search bar.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Content Security Policy (CSP): Implement a strong CSP to
+                    restrict the execution of inline scripts,
+                    which would block this type of injection even if a tag is successfully closed.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active"); // 🔥 IMPORTANT
+                }
+            });
+        }
+
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        document.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", function (e) {
+                const href = this.getAttribute("href");
+
+                if (href && !href.startsWith("#")) {
+                    e.preventDefault();
+
+                    document.body.classList.add("fade-out");
+
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 400);
+                }
+            });
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Reflected XSS into a JavaScript string with single quote and backslash escaped";
+        let i = 0;
+
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>
