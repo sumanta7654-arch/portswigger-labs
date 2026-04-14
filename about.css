@@ -63,3 +63,42 @@ h1 {
     background: #b8cac6;
     border-radius: 50%;
 }
+.journey-title {
+    margin-top: 50px;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #ffffff;
+}
+
+.about-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 80px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.about-nav .logo {
+    color: #00ffcc;
+    font-size: 22px;
+}
+
+.about-nav ul {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+}
+
+.about-nav a {
+    text-decoration: none;
+    color: #c9d1d9;
+    transition: 0.3s;
+}
+
+.about-nav a:hover {
+    color: #00ffcc;
+}
+
+.about-nav .active {
+    color: #00ffcc;
+}

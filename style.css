@@ -428,3 +428,9 @@ body.loaded {
     max-width: 90%;
     max-height: 90%;
 }
+.journey-title {
+    margin-top: 50px;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #ffffff;
+}
