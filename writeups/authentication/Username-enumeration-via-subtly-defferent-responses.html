@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Medium</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147466/A79FEE44-5D6E-46CE-BD9C-C0F45F907F62_nx2jku.png">
+            <div>
+                <p>This lab is subtly vulnerable to username enumeration and password brute-force attacks. It has an
+                    account with a predictable username and password, which can be found in the following wordlists:
+                </p>
+                <P>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Candidate usernames</P>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Candidate passwords</p>
+                <p>To solve the lab, enumerate a valid username, brute-force this user's password, then access their
+                    account page. </p>
+            </div>
+        </div>
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <!-- STEP BLOCK -->
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147465/Screenshot_2026-04-14_11_10_13_w3ihzu.png">
+            <div>
+
+
+
+
+                <p>When an application says "Invalid username or password," it’s doing its job well by not giving away
+                    which part of the credentials was wrong. However, sometimes developers make a mistake in the backend
+                    logic where a valid username triggers a slightly different response than an invalid one—even if the
+                    message on the screen looks identical.</p>
+
+                <p>Our strategy is to act like a detective looking for "micro-differences." We aren't just looking for a
+                    different message; we are looking for different response headers, hidden tags, or even a single
+                    missing period in a sentence. By using Burp Intruder with Grep-Match, we can automate the process of
+                    checking hundreds of usernames to see which one fails to trigger the standard "Invalid" error
+                    message.</p>
+
+            </div>
+        </div>
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <!-- PROOF IMAGE BLOCK -->
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147466/Screenshot_2026-04-14_11_29_49_pkih0v.png">
+            <div>
+                <p>1. Intercept & Analyze: Open the login page and submit a random username and password. Capture this
+                    POST request in Burp Suite.</p>
+                <p>2. Initial Testing: Send the request to Repeater. Try submitting the same request several times to
+                    check for rate limiting. In this lab, we notice there are no attempt limits, which clears the way
+                    for a brute-force attack.</p>
+                <p>3. Identify the Target String: Look closely at the response. We see the error message:
+                    &lt;p class=is-warning&gt;Invalid username or password.&lt;/p&gt;. We will use this exact string to
+                    find our valid
+                    user.
+                </p>
+            </div>
+        </div>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147470/Screenshot_2026-04-14_11_30_01_hzross.png">
+            <div>
+                <p>4.Username Enumeration (Intruder):
+                </p>
+                <P>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Send the request to Intruder and set the payload position on the
+                    username parameter.</P>
+                <P>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Paste the provided username list into the Payloads tab.</P>
+                <P>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Go to Grep - Match under the Options (or Settings) tab. Clear
+                    the defaults and add the string: Invalid username or </P>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;password.</P>
+                <P>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Start the Attack.</P>
+            </div>
+        </div>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147470/Screenshot_2026-04-14_11_31_30_ky30mv.png">
+            <div>
+                <p>5. Analyze the Results: Sort the results by the Grep-Match column. Most results will show a "1"
+                    (meaning the error message was found). Look for the one result that shows "0". This is our valid
+                    username because the server responded differently!</p>
+                <p>6. Password Brute-Force:</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Take that valid username back to the Positions tab and fix it.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Set the payload position on the password parameter.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Paste the password list and start the attack.</p>
+            </div>
+        </div>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147470/Screenshot_2026-04-14_11_37_45_naujql.png">
+            <div>
+                <p>7. Final Login: Look for a result with a 302 Redirect status code or a significantly different
+                    response length. Right-click that request, select "Show response in browser," and log in.</p>
+                <p>8. Result: Lab successfully solved.</p>
+            </div>
+        </div>
+        <h2 class="section-title">Technical Explanation</h2>
+        <!-- FINAL STEP BLOCK -->
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776150656/Screenshot_2026-04-14_12_39_35_da7mew.png">
+            <div>
+
+                <p>The vulnerability here is Username Enumeration. Although the front-end message looks the same to a
+                    human, the backend is likely handling the logic in two different blocks: one for "user not found"
+                    and one for "user found, but password wrong." If there is even a tiny difference in how these two
+                    blocks render the HTML (like a hidden space or a different CSS class), an attacker can automate a
+                    script to distinguish between them.
+                </p>
+
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776147470/Screenshot_2026-04-14_11_44_35_woeksg.png">
+            <div>
+                <h2 class="section-title">Conclusion</h2>
+                <p>This lab shows that "security through obscurity" (trying to hide the error) isn't enough if the
+                    underlying code isn't consistent. Subtle differences in responses are just as dangerous as clear
+                    error messages. As a pentester, always look at the raw response data in Burp, not just what appears
+                    in the browser window.
+                </p>
+            </div>
+        </div>
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Uniform Error Messages: Ensure that the application returns the
+                    exact same HTTP response (including status codes, headers, and body length) regardless of whether
+                    the username or password was incorrect.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Account Lockout & Rate Limiting: Implement a mechanism to
+                    temporarily lock an account or block an IP address after a certain number of failed attempts. This
+                    makes automated enumeration much harder.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bcrypt/Argon2 Consistency: Ensure that the time taken to process
+                    a "user not found" request is the same as a "wrong password" request to prevent Timing Attacks.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active"); // 🔥 IMPORTANT
+                }
+            });
+        }
+
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        document.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", function (e) {
+                const href = this.getAttribute("href");
+
+                if (href && !href.startsWith("#")) {
+                    e.preventDefault();
+
+                    document.body.classList.add("fade-out");
+
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 400);
+                }
+            });
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Username enumeration via subtly different responses";
+        let i = 0;
+
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>
