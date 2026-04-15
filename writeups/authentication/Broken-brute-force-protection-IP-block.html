@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication | Broken Brute-Force Protection</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="">
+            <div>
+                <p>This lab has a brute-force protection mechanism that blocks an IP address after three consecutive
+                    failed login attempts. However, this protection is flawed and can be bypassed by strategically
+                    interleaving valid login attempts.</p>
+                <p>The goal is to brute-force the user <code>carlos</code>'s password by resetting the failure counter
+                    before the block kicks in.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225009/Screenshot_2026-04-15_08_14_00_hzzwve.png">
+            <div>
+                <p>The core logic of this vulnerability is a <strong>Counter Reset Flaw</strong>. The server tracks
+                    consecutive failures. If we fail twice and then succeed once with our own account
+                    (<code>wiener:peter</code>), the "consecutive failure" count resets to zero.</p>
+                <p>Since <code>X-Forwarded-For</code> is not working here, we must act like a stealthy attacker who
+                    resets the alarm just before it goes off. By using a 2:1 ratio (2 attempts on Carlos, 1 successful
+                    login for us), we can bypass the IP block indefinitely.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225046/Screenshot_2026-04-15_08_18_44_qvgd56.png">
+            <div>
+                <p>1. <strong>Intercept & Analyze:</strong> Log in with <code>wiener:peter</code> and capture the POST
+                    request. Send it to Repeater and observe that after 3 wrong attempts, the server blocks the IP.
+                    Notice that headers like <code>X-Forwarded-For</code> are ignored by the WAF/Server.</p>
+                <p>2. <strong>Prepare the Payload List:</strong> We need to create a custom list. For every two
+                    passwords from the Carlos list, we must insert our own valid credentials (<code>wiener:peter</code>)
+                    as the third attempt.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225069/Screenshot_2026-04-15_09_03_47_y0towu.png">
+            <div>
+                <p>3. <strong>Intruder Configuration:</strong> Set the attack type to <strong>Pitchfork</strong>. Set
+                    Payload 1 on the <code>username</code> parameter and Payload 2 on the <code>password</code>
+                    parameter.</p>
+                <p>4. <strong>Setting Payloads:</strong>
+                    <br>• Payload 1: <code>carlos, carlos, wiener</code> (repeatedly).
+                    <br>• Payload 2: <code>pass1, pass2, peter</code> (repeatedly from the list).
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225092/Screenshot_2026-04-15_09_11_15_dieewp.png">
+            <div>
+                <p>5. <strong>Resource Pool:</strong> This is critical. Go to the <strong>Resource Pool</strong> tab and
+                    set <strong>Maximum concurrent requests to 1</strong>. If we send requests in parallel, the sequence
+                    will break, and we will get blocked.</p>
+                <p>6. <strong>Start Attack:</strong> Start the attack and watch the responses. Every third request (our
+                    login) should be a <code>302</code> or <code>200</code>, keeping the connection open.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225017/Screenshot_2026-04-15_09_13_45_fczkkm.png">
+            <div>
+                <p>7. <strong>Identify the Password:</strong> Sort the results by the <code>carlos</code> username. Look
+                    for a <code>302 Redirect</code> status code that isn't our own account. That is the correct password
+                    for Carlos.</p>
+                <p>8. <strong>Final Step:</strong> Right-click the successful request, select "Show response in
+                    browser," and log in to solve the lab.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <div>
+                <p>The vulnerability lies in the <strong>State Management</strong> of the brute-force protection.
+                    Instead of tracking total failed attempts over a window of time, the server only tracks
+                    <em>consecutive</em> failures. By injecting a successful login into the stream of failed attempts,
+                    we "cleanse" the session state, effectively blinding the security monitor to our brute-force attack.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Global Rate Limiting:</strong> Implement rate limiting
+                    based on the total number of attempts per IP/Account within a fixed time window (e.g., 5 mins),
+                    regardless of successful logins in between.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Progressive Delays:</strong> Introduce an exponential
+                    backoff (increasing wait time) for every failed attempt to slow down automated scripts.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Account Lockout:</strong> Use a robust lockout mechanism
+                    that requires MFA or CAPTCHA once a threshold is reached.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Broken brute-force protection, IP block";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>
