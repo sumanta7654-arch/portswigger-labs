@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication | Brute-forcing a Stay-Logged-In Cookie</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776489759/Screenshot_18-4-2026_95817_portswigger.net_vleqvt.jpg">
+            <div>
+                <p>This lab uses a "stay-logged-in" cookie that is insecurely generated. The cookie contains the user's
+                    username and a hashed version of their password, all encoded in Base64.</p>
+                <p>To solve the lab, we need to brute-force the <code>stay-logged-in</code> cookie for the user
+                    <code>carlos</code> using the provided password list and access his account page.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776489757/Screenshot_2026-04-18_10_12_49_kiug7e.png">
+            <div>
+                <p>When you see a cookie like <code>d2llbmVyOjUxZGMzMGRkYzQ3M2Q0M2E2MDExZTllYmJhNmNhNzcw</code>, the
+                    first step is to decode it. In this lab, the format is <code>username:md5(password)</code>, then
+                    Base64 encoded.</p>
+                <p>Instead of manually hashing every password from the list, we will use <strong>Burp Intruder's Payload
+                        Processing Rules</strong>. This allows us to take a plain text password, hash it, add the
+                    prefix, and encode it on the fly for each request.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776489764/Screenshot_2026-04-18_10_13_15_k5qoms.png">
+            <div>
+                <p>1. <strong>Capture the Request:</strong> Login with <code>wiener:peter</code> and check the "Stay
+                    logged in" box. In Burp Suite, capture the <code>GET /my-account?id=wiener</code> request. Observe
+                    the <code>stay-logged-in</code> cookie.</p>
+                <p>2. <strong>Analyze the Cookie:</strong> Send the cookie value to the Inspector or Decoder. You'll
+                    find it decodes from Base64 to: <code>wiener:51dc30ddc473d43a6011e9ebba6ca770</code>. The string
+                    after the colon is an MD5 hash of "peter".</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776489761/Screenshot_2026-04-18_10_28_45_rvaye8.png">
+            <div>
+                <p>3. <strong>Intruder Setup:</strong> Send the <code>GET /my-account</code> request to Intruder. Change
+                    the <code>id</code> parameter to <code>carlos</code> and set the payload position on the
+                    <code>stay-logged-in</code> cookie value.
+                </p>
+                <p>4. <strong>Payload Configuration:</strong> Paste the provided password list into the Payloads tab.
+                    Now, we must transform these plain passwords into the correct cookie format using rules.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776489761/Screenshot_2026-04-18_10_28_59_ydfazy.png">
+            <div>
+                <p>5. <strong>Payload Processing Rules:</strong> Add the following rules in order:
+                    <br>• <strong>Hash (MD5):</strong> Converts password to hash.
+                    <br>• <strong>Add Prefix (carlos:):</strong> Important to include the colon.
+                    <br>• <strong>Encode (Base64):</strong> Encodes the entire string.
+                </p>
+                <p>6. <strong>Start Attack:</strong> Run the attack and sort by <strong>Length</strong> or
+                    <strong>Status Code</strong>. Look for a <code>200 OK</code> response with a significantly different
+                    length.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776489759/Screenshot_2026-04-18_10_29_20_waloer.png">
+            <div>
+                <p>7. <strong>Verification:</strong> Once you find the correct request, right-click and select "Show
+                    response in browser." Copy the URL into your browser.</p>
+                <p>8. <strong>Success:</strong> You are now logged in as Carlos. The lab is successfully solved through
+                    cookie manipulation.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <div>
+                <p>The vulnerability here is <strong>Insecure Persistent Storage</strong> of credentials. By using a
+                    predictable hashing algorithm (MD5) and a static format (username:hash) in a client-side cookie, the
+                    application allows an attacker to forge valid session tokens. Even though the password is hashed, it
+                    is not "salted," making it vulnerable to simple brute-force or rainbow table attacks.</p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Opaque Tokens:</strong> Instead of storing
+                    credentials in the cookie, use a random, high-entropy session ID that maps to a server-side session.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Avoid Client-Side Hashing:</strong> Never store
+                    sensitive data like MD5 hashes in cookies, as they can be easily manipulated or cracked.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Digital Signatures:</strong> If data must be stored in a
+                    cookie, use a HMAC (Hash-based Message Authentication Code) with a secret server-side key to prevent
+                    tampering.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Brute-forcing a stay-logged-in cookie";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>

@@ -441,5 +441,5 @@ body.loaded {
 
 .card:hover {
     transform: translateY(-15px) scale(2.0);
-    box-shadow: 0 0 30px rgba(0, 255, 204, 0.1);
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
 }

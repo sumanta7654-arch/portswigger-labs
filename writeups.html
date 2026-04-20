@@ -23,34 +23,42 @@
         <!-- 🔍 Search -->
         <input type="text" id="search" placeholder="Search writeups...">
 
-        <!-- 🔥 Authentication -->
+        <!--  Authentication -->
         <h2 class="section-heading">Authentication</h2>
         <div class="card-grid">
 
             <div class="card reveal">
                 <h3>Username Enumeration Via Different Responses</h3>
-                <p>Different response based username discovery</p>
+                
+                <p>Identify valid usernames by analyzing differences in login error responses.</p>
+                
                 <span class="tag">Easy</span>
                 <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
             </div>
 
             <div class="card reveal">
                 <h3>2FA simple bypass</h3>
-                <p>Different response based username discovery</p>
+                
+                <p>Bypass two-factor authentication using logic flaw in verification process.</p>
+                
                 <span class="tag">Easy</span>
                 <a href="writeups/authentication/2FA-simple-bypass.html">Read More →</a>
             </div>
 
             <div class="card reveal">
                 <h3>Password reset broken logic</h3>
-                <p>Different response based username discovery</p>
+                
+                <p>Exploit password reset logic to take over accounts without proper validation.</p>
+                
                 <span class="tag">Easy</span>
                 <a href="writeups/authentication/Password-reset-broken-logic.html">Read More →</a>
             </div>
 
             <div class="card reveal">
                 <h3>Username Enumeration Via Subtly Different Responses</h3>
-                <p>Different response based username discovery</p>
+                
+                <p>Detect valid users through subtle differences in authentication responses.</p>
+                
                 <span class="tag">Medium</span>
                 <a href="writeups/authentication/Username-enumeration-via-subtly-defferent-responses.html">Read More
                     →</a>
@@ -58,63 +66,93 @@
 
             <div class="card reveal">
                 <h3>Username Enumeration Via Different Response timing</h3>
-                <p>Different response based username discovery</p>
+                
+                <p>Use response timing differences to enumerate valid usernames.</p>
+                
                 <span class="tag">Medium</span>
                 <a href="writeups/authentication/Username-enumeration-via-response-timing.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>Username Enumeration Via Different Response timing</h3>
-                <p>Different response based username discovery</p>
+                
+                <p>Analyze server response timing to identify existing usernames.</p>
+                
                 <span class="tag">Medium</span>
                 <a href="writeups/authentication/Username-enumeration-via-response-timing.html">Read More →</a>
             </div>
             <div class="card reveal">
-                <h3>Broken brute-force protection, IP block</h3>
-                <p>Different response based username discovery</p>
+                <h3>Broken brute-force protection, IP block</h3>                
+                <p>Bypass brute-force protection by exploiting IP-based blocking weakness.</p>                
                 <span class="tag">Medium</span>
                 <a href="writeups/authentication/Broken-brute-force-protection-IP-block.html">Read More →</a>
             </div>
             <div class="card reveal">
-                <h3>Broken brute-force protection, IP block</h3>
-                <p>Different response based username discovery</p>
+                <h3>Username Enumeration Via Acoount Lock</h3>               
+                <p>Trigger account lock behavior to identify valid usernames.</p>                
                 <span class="tag">Medium</span>
-                <a href="writeups/authentication/Broken-brute-force-protection-IP-block.html">Read More →</a>
+                <a href="writeups/authentication/Username-enum-via-account-lock.html">Read More →</a>
             </div>
             <div class="card reveal">
-                <h3>Broken brute-force protection, IP block</h3>
-                <p>Different response based username discovery</p>
+                <h3>Brute forcing a stay loged in cookie</h3>
+                <p>Crack persistent login cookies to gain unauthorized access.</p>
                 <span class="tag">Medium</span>
-                <a href="writeups/authentication/Broken-brute-force-protection-IP-block.html">Read More →</a>
+                <a href="writeups/authentication/Brute-forcing-a-stay-loged-in-cookie.html">Read More →</a>
             </div>
             <div class="card reveal">
-                <h3>Broken brute-force protection, IP block</h3>
-                <p>Different response based username discovery</p>
+                <h3>Offline password cracking</h3>
+                <p>Perform offline password cracking using leaked hashed credentials.</p>
                 <span class="tag">Medium</span>
-                <a href="writeups/authentication/Broken-brute-force-protection-IP-block.html">Read More →</a>
+                <a href="writeups/authentication/Offline_password_cracking.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Broken brute-force protection, multiple credential per request</h3>
+                <p>Send multiple credentials in a single request to bypass brute-force protection.</p>
+                <span class="tag">Hard</span>
+                <a href="writeups/authentication/Broken-brute-force-protection-multiple-credential-per-request.html">Read
+                    More →</a>
             </div>
 
         </div>
 
-        <!-- 🔥 Access Control -->
+        <!--  Access Control -->
         <h2 class="section-heading">Access Control</h2>
         <div class="card-grid">
 
             <div class="card reveal">
-                <h3>IDOR Vulnerability</h3>
-                <p>Access other user data by changing ID</p>
+                <h3>Unpredictable admin functionality</h3>
+                <p>Access hidden admin functionality due to missing access control checks.</p>
                 <span class="tag">Easy</span>
-                <a href="writeups/IDOR/idor.html">Read More →</a>
+                <a href="writeups/Access-control/unprotected-admin-panel.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Unpredictable admin functionality with unpredictabel URL</h3>
+                <p>Discover admin panel via unpredictable URL and bypass authorization.</p>
+                <span class="tag">Easy</span>
+                <a href="writeups/Access-control/unpredictable-admin-functionality-with-unpredictable-url.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>User Role Controlled By Request Parameter</h3>
+                <p>Modify user role through request parameters to gain admin access.</p>
+                <span class="tag">Easy</span>
+                <a href="writeups/Access-control/User-role-controlled-by-request-parameter.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>User Role Can Be Modified In User Profile</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag">Easy</span>
+                <a href="writeups/Access-control/user-role-can-be-modified-in-user-profile.html">Read More →</a>
             </div>
 
         </div>
 
-        <!-- 🔥 XSS -->
+        <!--  XSS -->
         <h2 class="section-heading">XSS</h2>
         <div class="card-grid">
 
             <div class="card reveal">
                 <h3>Reflected XSS</h3>
-                <p>Basic XSS attack using input reflection</p>
+                <p>Inject malicious script via input reflected inside JavaScript context.</p>
                 <span class="tag">Medium</span>
                 <a
                     href="writeups/xss/Reflected-XSS-into-a-JavaScript-string-with-single-quote-and-backslash-escaped.html">Read

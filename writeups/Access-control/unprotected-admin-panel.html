@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Information Disclosure | Unprotected Admin Functionality</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Apprentice</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776661854/Screenshot_20-4-2026_103858_portswigger.net_umi9ch.jpg">
+            <div>
+                <p>This lab has an unprotected admin panel that is hidden from public view. The goal is to locate this
+                    panel and use it to delete the user <code>carlos</code>.</p>
+                <p>To solve the lab, we will use common reconnaissance techniques to find the secret URL that the
+                    developers thought was hidden.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776661841/Screenshot_2026-04-20_10_26_30_mjzncv.png">
+            <div>
+                <p>Developers often use <code>robots.txt</code> to tell search engines (like Google) which pages
+                    <strong>not</strong> to crawl. Ironically, this file often acts as a roadmap for hackers, as it
+                    explicitly lists hidden or sensitive directories.
+                </p>
+                <p>Our strategy is to check these "disallowed" paths. If the server only relies on the URL being hard to
+                    guess but doesn't implement actual authentication, we can gain full administrative access just by
+                    visiting the link.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776661840/Screenshot_2026-04-20_10_27_39_kef8yo.png">
+            <div>
+                <p>1. <strong>Reconnaissance:</strong> Go to the lab's home page or login screen. Instead of trying to
+                    guess credentials, we will look for hidden files. Manually navigate to the <code>/robots.txt</code>
+                    file by appending it to the root URL.</p>
+                <p>2. <strong>Analyze robots.txt:</strong> You will see a "Disallow" entry. In this lab, it reveals a
+                    hidden path: <code>Disallow: /administrator-panel</code>. This is our target.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776661844/Screenshot_2026-04-20_10_28_51_dden3p.png">
+            <div>
+                <p>3. <strong>Access the Panel:</strong> Copy the path <code>/administrator-panel</code> and paste it
+                    into your browser's address bar after the main lab URL. You will be granted access to the
+                    administrative dashboard without being asked for a password.</p>
+                <p>4. <strong>Exploit & Solve:</strong> Locate the user management section, find the user
+                    <code>carlos</code>, and click the <strong>Delete</strong> button. The lab is now solved.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <div>
+                <p>The vulnerability here is <strong>Unprotected Admin Functionality</strong> combined with
+                    <strong>Information Disclosure</strong>. The application assumes that as long as the URL is not
+                    linked on the main page, it is secure. However, using <code>robots.txt</code> to hide directories is
+                    a major security risk because it is a publicly readable file that serves as a directory of sensitive
+                    areas.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Enforce Authentication:</strong> Never rely on "hidden"
+                    URLs for security. Every administrative page must require a valid, authenticated session with
+                    administrative privileges.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Role-Based Access Control (RBAC):</strong> Implement
+                    strict checks on the backend to ensure that even if a user finds the URL, they cannot perform
+                    actions without the proper role.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Secure robots.txt:</strong> Do not list sensitive
+                    internal directories in <code>robots.txt</code>. Use proper server-side access controls instead.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Unprotected admin functionality";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>

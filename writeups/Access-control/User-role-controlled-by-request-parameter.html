@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | User Role Controlled by Request Parameter</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664790/Screenshot_20-4-2026_112728_portswigger.net_gjcb5v.jpg">
+            <div>
+                <p>This lab uses a request parameter to determine the user's privilege level. By manipulating this
+                    parameter, we can escalate our privileges from a regular user to an administrator.</p>
+                <p>The goal is to access the admin panel and delete the user <code>carlos</code> by spoofing our
+                    administrative status.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664794/Screenshot_2026-04-20_11_08_22_rpzrkn.png">
+            <div>
+                <p>Web applications should always manage user roles on the backend. If you see a parameter like
+                    <code>admin=false</code> or <code>role=user</code> in a URL or a Cookie, it’s a massive red flag. It
+                    suggests that the server is asking the browser, "Are you an admin?" instead of checking its own
+                    secure database.
+                </p>
+                <p>Our strategy is simple: **Intercept and Lie**. We will tell the server that we are an administrator
+                    by changing the boolean value from <code>false</code> to <code>true</code>.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664790/Screenshot_2026-04-20_11_08_52_c5pgiz.png">
+            <div>
+                <p>1. <strong>Capture Account Request:</strong> Log in with <code>wiener:peter</code>. Open Burp Suite
+                    and capture the <code>GET /my-account?id=wiener</code> request. Notice the interesting parameter in
+                    the cookie or URL: <code>Admin=false</code>.</p>
+                <p>2. <strong>First Manipulation:</strong> Change <code>Admin=false</code> to <code>Admin=true</code>.
+                    Send the request to the browser. You will notice that a new link for the "Admin Panel" appears in
+                    the navigation bar.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664784/Screenshot_2026-04-20_11_09_22_ywoddj.png">
+            <div>
+                <p>3. <strong>Access Admin Panel:</strong> Click on the <strong>Admin Panel</strong> link. Capture this
+                    <code>GET /admin</code> request in Burp Suite before it reaches the server.
+                </p>
+                <p>4. <strong>Bypass Panel Restriction:</strong> Send the request to Repeater. If you try to access it
+                    normally, you might get a "401 Unauthorized" because the server checks the parameter again. Modify
+                    it to <code>Admin=true</code> once more.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664793/Screenshot_2026-04-20_11_09_52_pkgnt0.png">
+            <div>
+                <p>5. <strong>Analyze Admin Dashboard:</strong> After sending the modified request, view the response in
+                    the browser. You should now see the list of users and the "Delete" buttons for each.</p>
+                <p>6. <strong>Target Carlos:</strong> Locate <code>carlos</code> and click the <strong>Delete</strong>
+                    button. Immediately capture the resulting request (e.g.,
+                    <code>GET /admin/delete?username=carlos</code>).
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664795/Screenshot_2026-04-20_11_10_14_dj8g81.png">
+            <div>
+                <p>7. <strong>Final Exploit:</strong> In Burp Suite (Repeater or Proxy), ensure that the
+                    <code>Admin=true</code> parameter is still present in this delete request. Send the request.
+                </p>
+                <p>8. <strong>Verification:</strong> Check the response. If you see a <code>302 Found</code> or a
+                    success message, the user has been deleted. Refresh the page to see the "Lab Solved" banner.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664794/Screenshot_2026-04-20_11_11_40_dojsqx.png">
+            <div>
+                <p>The core vulnerability is <strong>Improper Authorization</strong>. The application logic trusts
+                    user-supplied input to define security clearance. Since HTTP requests are entirely under the
+                    attacker's control, any "security check" that happens on the client-side or depends on client-side
+                    parameters is essentially non-existent. This allows for horizontal and vertical <strong>Privilege
+                        Escalation</strong>.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776664795/Screenshot_2026-04-20_11_12_01_q9q3rs.png">
+            <div>
+                <p><strong>Conclusion:</strong> Never trust the client. Authorization checks must be performed on the
+                    server-side using secure session data that the user cannot modify directly.</p>
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Server-Side Session Management:</strong> Store the
+                    user's role in a secure, server-side session object (e.g., in Redis or a database) rather than in a
+                    request parameter or a modifiable cookie.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>RBAC (Role-Based Access Control):</strong> Implement a
+                    central authorization module that checks the user's role against the required permission for every
+                    sensitive URL or action.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Principles of Least Privilege:</strong> Ensure that by
+                    default, users have no administrative access, and access is only granted based on internal server
+                    records.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: User role controlled by request parameter";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>

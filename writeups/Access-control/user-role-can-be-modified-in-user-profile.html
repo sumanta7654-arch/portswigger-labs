@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | User Role Modified in Profile</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666883/Screenshot_20-4-2026_12222_portswigger.net_qpkogv.jpg">
+            <div>
+                <p>This lab allows users to update their own profile information. However, the profile update function
+                    is vulnerable to mass assignment, allowing a user to modify sensitive fields like their
+                    <code>roleid</code>.
+                </p>
+                <p>Goal: Escalate your privileges by modifying your user profile JSON, access the admin panel, and
+                    delete <code>carlos</code>.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666857/Screenshot_2026-04-20_11_44_19_vfkufc.png">
+            <div>
+                <p>Many modern applications use JSON to send data to the backend. A common mistake developers make is
+                    using a "blind update" method—taking the entire JSON object from the request and saving it directly
+                    into the database.</p>
+                <p>If we can guess or discover hidden field names (like <code>roleid</code>, <code>isAdmin</code>, or
+                    <code>permissions</code>), we can include them in our update request. Even if those fields aren't
+                    visible on the UI, the backend might still process them and grant us higher privileges.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666857/Screenshot_2026-04-20_11_46_19_dhbkam.png">
+            <div>
+                <p>1. <strong>Baseline Analysis:</strong> Log in with <code>wiener:peter</code>. Notice that the initial
+                    login doesn't show any admin features or role-related parameters in the main navigation.</p>
+                <p>2. <strong>Identify Update Function:</strong> Go to the user account page and find the "Update Email"
+                    feature. Enter a new email and click update.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666881/Screenshot_2026-04-20_11_47_18_nz7jdp.png">
+            <div>
+                <p>3. <strong>Capture Update Request:</strong> In Burp Suite, capture the
+                    <code>POST /my-account/change-email</code> request. You will see the data is sent in a JSON format:
+                    <code>{"email":"test@example.com"}</code>.
+                </p>
+                <p>4. <strong>Exploit Mass Assignment:</strong> Send this request to Repeater. We will now attempt to
+                    inject a hidden parameter. Modify the JSON body to include the <code>roleid</code> field:
+                    <br><code>{"email":"wiener@normal-user.net", "roleid": 2}</code>
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666882/Screenshot_2026-04-20_11_48_49_d06iab.png">
+            <div>
+                <p>5. <strong>Verify Elevation:</strong> Send the modified request. If the server responds with
+                    <code>200 OK</code>, refresh your page in the browser. You should now see an <strong>Admin
+                        Panel</strong> link available to you.
+                </p>
+                <p>6. <strong>Access Admin Panel:</strong> Navigate to the admin panel. Since your <code>roleid</code>
+                    is now <code>2</code> (which typically represents 'Administrator' in many systems), the server
+                    grants you full access.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666858/Screenshot_2026-04-20_11_49_10_theefu.png">
+            <div>
+                <p>7. <strong>Delete Target:</strong> Locate the user <code>carlos</code> and click
+                    <strong>Delete</strong>. The request will now be authorized by your escalated session, and the lab
+                    will be solved.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776666874/Screenshot_2026-04-20_11_49_23_hr6nqn.png">
+            <div>
+                <p>The vulnerability is <strong>Mass Assignment</strong>. This happens when an application's backend
+                    framework automatically maps request parameters to internal database models without a "whitelist" of
+                    allowed fields. By adding <code>"roleid": 2</code> to the JSON, the attacker successfully overwrites
+                    their own permission level because the backend code trusts the input content implicitly.</p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Whitelisting:</strong> Explicitly define which
+                    fields the user is allowed to update (e.g., only <code>email</code> and <code>display_name</code>).
+                    Reject or ignore any other keys in the JSON.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>DTOs (Data Transfer Objects):</strong> Implement DTOs to
+                    separate the data coming from the user from the actual database model. Never pass raw user input
+                    directly into a database update function.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Read-Only Fields:</strong> Ensure that sensitive fields
+                    like <code>roleid</code> can only be modified by specific, highly-privileged administrative
+                    endpoints.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: User role can be modified in user profile";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>

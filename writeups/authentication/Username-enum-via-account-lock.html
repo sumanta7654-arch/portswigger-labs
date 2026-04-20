@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication | Account Lockout Enumeration</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395570/Screenshot_2026-04-17_07_50_02_qzrrld.png">
+            <div>
+                <p>This lab is vulnerable to username enumeration via account lockout. By monitoring how the application
+                    reacts after multiple failed attempts, we can distinguish between a valid and an invalid username.
+                </p>
+                <p>Goal: Enumerate a valid username, identify when it gets locked, and then brute-force the password for
+                    that specific user.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395569/Screenshot_2026-04-17_07_55_16_wmskvn.png">
+            <div>
+                <p>Most secure applications lock an account after several failed attempts. If an application locks
+                    <code>valid_user</code> but doesn't care how many times we try with <code>invalid_user</code>, it
+                    reveals which account actually exists in the system.
+                </p>
+                <p>Our strategy is to trigger this lockout purposefully. We will use <strong>Cluster Bomb</strong> to
+                    try multiple passwords against many usernames and look for a specific error message: <i>"You have
+                        made too many incorrect login attempts. Please try again in 1 minute(s)."</i></p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395577/Screenshot_2026-04-17_08_06_20_smllnz.png">
+            <div>
+                <p>1. <strong>Intercept & Investigate:</strong> Open Burp Suite, try a random login, and capture the
+                    POST request. Send it to Repeater. Notice that a few failed attempts don't immediately show a
+                    lockout for random users.</p>
+                <p>2. <strong>Intruder Setup (Phase 1):</strong> Send the request to Intruder and select the
+                    <strong>Cluster Bomb</strong> attack type.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395576/Screenshot_2026-04-17_08_14_06_z7oqd1.png">
+            <div>
+                <p>3. <strong>Payload Positions:</strong> Set Payload 1 on the <code>username</code> parameter and
+                    Payload 2 on the <code>password</code> parameter.</p>
+                <p>4. <strong>Payload Lists:</strong>
+                    <br>• Payload 1: Paste the username list from the lab description.
+                    <br>• Payload 2: Enter 5 random, unique passwords (e.g., 123, 456, etc.). This ensures we hit the
+                    lockout threshold for each user.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395577/Screenshot_2026-04-17_08_15_28_rnjwcb.png">
+            <div>
+                <p>5. <strong>Identify Valid User:</strong> Start the attack and sort by <strong>Length</strong>. You
+                    will see some responses are longer than others. Upon inspection, these longer responses contain the
+                    message: <code>"You have
+                        made too many incorrect login attempts. Please try again in 1 minute(s)."</code></p>
+                <p>6. <strong>Observation:</strong> Only the valid username (e.g., <code>azure</code> or similar) will
+                    trigger this message after the 5th attempt. Now we have our target username.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395577/Screenshot_2026-04-17_08_16_09_j1oaxi.png">
+            <div>
+                <p>7. <strong>Intruder Setup (Phase 2):</strong> Clear the previous settings. Switch the attack type to
+                    <strong>Sniper</strong>. Fix the username to the valid one we just found and set the payload on the
+                    <code>password</code> parameter.
+                </p>
+                <p>8. <strong>Password Brute-Force:</strong> Paste the password list from the description into the
+                    payload configuration and start the attack.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395577/Screenshot_2026-04-17_08_18_58_ewbjrr.png">
+            <div>
+                <p>9. <strong>Analyze Sniper Results:</strong> Sort the results by <strong>Length</strong> again. One
+                    result will stand out because it won't have the "invalid password" or "too many attempts" warning.
+                    This is our successful login.</p>
+                <p>10. <strong>Manual Login:</strong> Take the identified username and password, go to the real login
+                    page, and enter them manually.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776395578/Screenshot_2026-04-17_08_19_56_j9zqki.png">
+            <div>
+                <p>11. <strong>Success:</strong> Once logged in, the lab status will change to solved. You have
+                    successfully enumerated a user through defensive side-effects!</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <div>
+                <p>The vulnerability exists because the <strong>Account Lockout</strong> mechanism is applied only to
+                    existing users. When the backend checks a login, it first verifies the username. If it exists, it
+                    increments a 'failed attempt' counter. If it reaches the limit, it changes the response message.
+                    Since this doesn't happen for non-existent users, the difference in response (length and content)
+                    leaks the validity of the username.</p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Generic Lockout:</strong> The application should ideally
+                    mimic a lockout response even for invalid usernames after a certain number of attempts from a
+                    specific IP.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Consistent Messaging:</strong> Use a generic message
+                    like "Invalid credentials or account temporarily disabled" for all scenarios.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>IP-Based Rate Limiting:</strong> Implement rate limiting
+                    at the IP level to prevent an attacker from systematically testing an entire username list.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Username enumeration via account lock";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>

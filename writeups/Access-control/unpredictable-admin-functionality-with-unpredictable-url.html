@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Unpredictable Admin URL</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Apprentice</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776663050/Screenshot_20-4-2026_105856_portswigger.net_ykhjme.jpg">
+            <div>
+                <p>This lab hides its administrative console at an unpredictable URL. However, the application leaks
+                    this URL to all users through client-side scripts.</p>
+                <p>The goal is to find the hidden URL by inspecting the source code and use it to delete the user
+                    <code>carlos</code>.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776663061/Screenshot_2026-04-20_10_49_35_egsoaq.png">
+            <div>
+                <p>Developers often write JavaScript to dynamically change the UI based on user roles. If this logic is
+                    handled on the front-end (browser) rather than the back-end (server), any user can see the "hidden"
+                    logic by simply reading the source code.</p>
+                <p>Even if the URL is a random string like <code>/admin-tfisdl</code>, it is still "public" if it
+                    resides in a script tag that the browser must download to render the page.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776663054/Screenshot_2026-04-20_10_49_59_ymvfrj.png">
+            <div>
+                <p>1. <strong>Inspect Source:</strong> Access the lab's home page. Right-click anywhere on the page and
+                    select <strong>"View Page Source"</strong> (or press <code>Ctrl+U</code>).</p>
+                <p>2. <strong>Analyze JavaScript:</strong> Scroll down to the bottom of the HTML. You will find a
+                    <code>&lt;script&gt;</code> block containing logic for the admin panel. Look for a line like:
+                    <code>adminPanelTag.setAttribute('href', '/admin-tfisdl');</code>.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776663048/Screenshot_2026-04-20_10_53_49_dtdjsr.png">
+            <div>
+                <p>3. <strong>Access Hidden Panel:</strong> Copy the revealed path (e.g., <code>/admin-tfisdl</code>)
+                    and paste it into the URL bar after the main lab address. This will take you directly to the
+                    unprotected admin dashboard.</p>
+                <p>4. <strong>Perform Action:</strong> Locate the user <code>carlos</code> in the list and click
+                    <strong>Delete</strong>. The lab will be marked as solved once the user is removed from the
+                    database.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <div>
+                <p>This is a classic <strong>Information Leakage</strong> vulnerability. The server-side code is
+                    trusting the client-side code to "hide" the admin link. Since attackers have full control over the
+                    client environment (the browser), they can inspect every line of HTML and JS. Randomizing a URL
+                    (Unpredictable URL) is not a substitute for proper <strong>Access Control</strong>.</p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Server-Side Authorization:</strong> Always check the
+                    user's session and permissions on the server before rendering any administrative links or processing
+                    admin requests.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Remove Client-Side Logic:</strong> Sensitive URLs and
+                    administrative logic should never be sent to a non-admin user's browser, even in hidden script tags.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Secure Design:</strong> Use standard paths (like
+                    <code>/admin</code>) but protect them with multi-factor authentication and robust role-based access
+                    controls (RBAC).
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Unprotected admin functionality with unpredictable URL";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+
+</body>
+
+</html>
