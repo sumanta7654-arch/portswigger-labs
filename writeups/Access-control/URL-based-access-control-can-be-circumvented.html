@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | URL-based Access Control Circumvention</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835606/Screenshot_2026-04-22_10_03_06_hvvqmz.png">
+            <div>
+                <p>This lab uses a front-end server to restrict access to the <code>/admin</code> path. However, the
+                    back-end server supports custom HTTP headers that can override the requested URL. We will exploit
+                    this discrepancy to bypass the access control list (ACL).</p>
+                <p>Goal: Use the <code>X-Original-URL</code> header to access the admin panel and delete
+                    <code>carlos</code>.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835591/Screenshot_2026-04-22_10_03_20_j2wtjl.png">
+            <div>
+                <p>When you request <code>/admin</code>, the front-end (WAF/Proxy) sees the URL and blocks it
+                    immediately. But if we request the home page <code>/</code> and tell the server, "Hey, my original
+                    intent was to go to /admin" via a header, the front-end might let the request through because it
+                    only inspects the main URL path.</p>
+                <p>This is a <strong>Security Misconfiguration</strong> where the front-end and back-end don't agree on
+                    which part of the request defines the actual target resource.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835624/Screenshot_2026-04-22_10_04_39_sehqfl.png">
+            <div>
+                <p>1. <strong>Direct Access Failure:</strong> Try to visit <code>/admin</code> directly in your browser.
+                    You will receive an "Access denied" message. This confirms the front-end filter is working.</p>
+                <p>2. <strong>Test for Header Support:</strong> Open Burp Suite. Change the request to
+                    <code>GET /</code> and add the header <code>X-Original-URL: /invalid</code>. If you get a "404 Not
+                    Found", it proves the backend is trying to process the path provided in that header.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835628/Screenshot_2026-04-22_10_05_30_a6ffsk.png">
+            <div>
+                <p>3. <strong>Access Admin Panel:</strong> Now, modify the header to <code>X-Original-URL: /admin</code>
+                    while keeping the main request path as <code>GET /</code>. Send the request and view the response in
+                    the browser. You should now see the admin dashboard.</p>
+                <p>4. <strong>Identify Delete Endpoint:</strong> Observe the "Delete" button for Carlos. Usually, it
+                    points to <code>/admin/delete?username=carlos</code>. Trying this normally will result in another
+                    "Access denied" from the front-end.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835604/Screenshot_2026-04-22_10_14_09_ohuves.png">
+            <div>
+                <p>5. <strong>Craft Delete Exploit:</strong> In Burp, set the main request to
+                    <code>GET /?username=carlos</code> (sending the query parameter to the root). Then, add the header
+                    <code>X-Original-URL: /admin/delete</code>.
+                </p>
+                <p>6. <strong>Execute Attack:</strong> Send this request. The front-end sees a request to <code>/</code>
+                    (allowed), but the back-end processes it as <code>/admin/delete</code> with the username parameter.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835631/Screenshot_2026-04-22_10_22_07_txx1pt.png">
+            <div>
+                <p>7. <strong>Verification:</strong> Check the response. A <code>200 OK</code> or a success message
+                    indicates the user has been deleted. Refresh the lab page to confirm it is solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949410/Screenshot_2026-04-23_18_25_52_fynnoe.png">
+            <div>
+                <p>This vulnerability is caused by an <strong>Inconsistent Interpretation of HTTP Requests</strong>. The
+                    front-end server only checks the URL line of the HTTP request, while the back-end application
+                    framework (like certain versions of Symfony or Zend) allows the <code>X-Original-URL</code> or
+                    <code>X-Rewrite-URL</code> headers to override the routing logic. This discrepancy allows an
+                    attacker to "hide" the forbidden path from the security filter.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Disable Override Headers:</strong> Configure the backend
+                    server or application framework to ignore non-standard headers like <code>X-Original-URL</code> for
+                    routing purposes.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Normalize Requests:</strong> Ensure that both front-end
+                    and back-end servers use the same rules for parsing and authorizing URLs.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Defense in Depth:</strong> Apply access control logic at
+                    the application level (code) rather than relying solely on network-level filters (WAF/Proxy).</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: URL-based access control can be circumvented";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+</body>
+
+</html>

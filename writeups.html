@@ -11,9 +11,19 @@
 
     <nav>
         <h2 class="logo">Sumanta</h2>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-        </ul>
+
+        <div class="nav-right">
+            <div class="progress-box">
+                <span id="progress-text">Progress: 0/100</span>
+                <div class="progress-bar">
+                    <div id="progress-fill"></div>
+                </div>
+            </div>
+
+            <ul>
+                <li><a href="index.html">Home</a></li>
+            </ul>
+        </div>
     </nav>
 
     <div class="writeups-page">
@@ -29,85 +39,85 @@
 
             <div class="card reveal">
                 <h3>Username Enumeration Via Different Responses</h3>
-                
+
                 <p>Identify valid usernames by analyzing differences in login error responses.</p>
-                
-                <span class="tag">Easy</span>
+
+                <span class="tag easy">Easy</span>
                 <a href="writeups/authentication/Username-enumeration-via-different-responses.html">Read More →</a>
             </div>
 
             <div class="card reveal">
                 <h3>2FA simple bypass</h3>
-                
+
                 <p>Bypass two-factor authentication using logic flaw in verification process.</p>
-                
-                <span class="tag">Easy</span>
+
+                <span class="tag easy">Easy</span>
                 <a href="writeups/authentication/2FA-simple-bypass.html">Read More →</a>
             </div>
 
             <div class="card reveal">
                 <h3>Password reset broken logic</h3>
-                
+
                 <p>Exploit password reset logic to take over accounts without proper validation.</p>
-                
-                <span class="tag">Easy</span>
+
+                <span class="tag easy">Easy</span>
                 <a href="writeups/authentication/Password-reset-broken-logic.html">Read More →</a>
             </div>
 
             <div class="card reveal">
                 <h3>Username Enumeration Via Subtly Different Responses</h3>
-                
+
                 <p>Detect valid users through subtle differences in authentication responses.</p>
-                
-                <span class="tag">Medium</span>
+
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Username-enumeration-via-subtly-defferent-responses.html">Read More
                     →</a>
             </div>
 
             <div class="card reveal">
                 <h3>Username Enumeration Via Different Response timing</h3>
-                
+
                 <p>Use response timing differences to enumerate valid usernames.</p>
-                
-                <span class="tag">Medium</span>
+
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Username-enumeration-via-response-timing.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>Username Enumeration Via Different Response timing</h3>
-                
+
                 <p>Analyze server response timing to identify existing usernames.</p>
-                
-                <span class="tag">Medium</span>
+
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Username-enumeration-via-response-timing.html">Read More →</a>
             </div>
             <div class="card reveal">
-                <h3>Broken brute-force protection, IP block</h3>                
-                <p>Bypass brute-force protection by exploiting IP-based blocking weakness.</p>                
-                <span class="tag">Medium</span>
+                <h3>Broken brute-force protection, IP block</h3>
+                <p>Bypass brute-force protection by exploiting IP-based blocking weakness.</p>
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Broken-brute-force-protection-IP-block.html">Read More →</a>
             </div>
             <div class="card reveal">
-                <h3>Username Enumeration Via Acoount Lock</h3>               
-                <p>Trigger account lock behavior to identify valid usernames.</p>                
-                <span class="tag">Medium</span>
+                <h3>Username Enumeration Via Acoount Lock</h3>
+                <p>Trigger account lock behavior to identify valid usernames.</p>
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Username-enum-via-account-lock.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>Brute forcing a stay loged in cookie</h3>
                 <p>Crack persistent login cookies to gain unauthorized access.</p>
-                <span class="tag">Medium</span>
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Brute-forcing-a-stay-loged-in-cookie.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>Offline password cracking</h3>
                 <p>Perform offline password cracking using leaked hashed credentials.</p>
-                <span class="tag">Medium</span>
+                <span class="tag medium">Medium</span>
                 <a href="writeups/authentication/Offline_password_cracking.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>Broken brute-force protection, multiple credential per request</h3>
                 <p>Send multiple credentials in a single request to bypass brute-force protection.</p>
-                <span class="tag">Hard</span>
+                <span class="tag hard">Hard</span>
                 <a href="writeups/authentication/Broken-brute-force-protection-multiple-credential-per-request.html">Read
                     More →</a>
             </div>
@@ -121,39 +131,113 @@
             <div class="card reveal">
                 <h3>Unpredictable admin functionality</h3>
                 <p>Access hidden admin functionality due to missing access control checks.</p>
-                <span class="tag">Easy</span>
+
                 <a href="writeups/Access-control/unprotected-admin-panel.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>Unpredictable admin functionality with unpredictabel URL</h3>
                 <p>Discover admin panel via unpredictable URL and bypass authorization.</p>
-                <span class="tag">Easy</span>
+                <span class="tag easy">Easy</span>
                 <a href="writeups/Access-control/unpredictable-admin-functionality-with-unpredictable-url.html">Read
                     More →</a>
             </div>
             <div class="card reveal">
                 <h3>User Role Controlled By Request Parameter</h3>
                 <p>Modify user role through request parameters to gain admin access.</p>
-                <span class="tag">Easy</span>
+                <span class="tag easy">Easy</span>
                 <a href="writeups/Access-control/User-role-controlled-by-request-parameter.html">Read More →</a>
             </div>
             <div class="card reveal">
                 <h3>User Role Can Be Modified In User Profile</h3>
                 <p>Escalate privileges by editing role data inside user profile.</p>
-                <span class="tag">Easy</span>
+                <span class="tag easy">Easy</span>
                 <a href="writeups/Access-control/user-role-can-be-modified-in-user-profile.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>User ID Controlled By Request Parameter With Data Leakage In Redirect</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag easy">Easy</span>
+                <a
+                    href="writeups/Access-control/User-id-controlled-by-request-parameter-with-data-leakage-in-redirect.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>User ID Controlled By Request Parameter</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag easy">Easy</span>
+                <a href="writeups/Access-control/User-ID-controlled-by-request-parameter.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>User ID Controlled By Request Parameter With Unpredictable User IDs</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag easy">Easy</span>
+                <a
+                    href="writeups/Access-control/User-id-controlled-by-request-parameter-with-unpredictable-user-IDa.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>User ID Controlled By Request Parameter With Password Discloser</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/Access-control/User-ID-controlled-by-request-parameter-with-password-discloser.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Insecure Direct Object Reference</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/Access-control/Insecure-Direct-Object-Reference.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>URL based access control can be circumvented</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/Access-control/URL-based-access-control-can-be-circumvented.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Method-based access control can be circumvented</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/Access-control/URL-based-access-control-can-be-circumvented.html">Read More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Multi step process with no access control on one step</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/Access-control/Multi-step-process-with-no-access-control-on-one-step.html">Read More
+                    →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Reffere based access control</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/Access-control/Refferer-based-access-control.html">Read More →</a>
             </div>
 
         </div>
 
         <!--  XSS -->
-        <h2 class="section-heading">XSS</h2>
+        <h2 class="section-heading">Cross-site scripting</h2>
         <div class="card-grid">
 
             <div class="card reveal">
+                <h3>Stored XSS into HTML context with nothing encoded</h3>
+                <p>Inject malicious script via input reflected inside JavaScript context.</p>
+                <span class="tag easy">easy</span>
+                <a href="writeups/xss/Stored-XSS-into-HTML-context-with-nothing-encoded.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>Reflected XSS into HTML context with nothing encoded</h3>
+                <p>Inject malicious script via input reflected inside JavaScript context.</p>
+                <span class="tag easy">easy</span>
+                <a href="writeups/xss/Reflected-XSS-into-HTML-context-with-nothing-encoded.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
                 <h3>Reflected XSS</h3>
                 <p>Inject malicious script via input reflected inside JavaScript context.</p>
-                <span class="tag">Medium</span>
+                <span class="tag medium">Medium</span>
                 <a
                     href="writeups/xss/Reflected-XSS-into-a-JavaScript-string-with-single-quote-and-backslash-escaped.html">Read
                     More →</a>
@@ -174,11 +258,51 @@
 
                 if (elementTop < windowHeight - 80) {
                     el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
                 }
+
             });
         }
 
         window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("DOMContentLoaded", revealOnScroll);
+    </script>
+    <script>
+        const searchInput = document.getElementById("search");
+
+        searchInput.addEventListener("keyup", function () {
+            const value = this.value.toLowerCase();
+
+            const cards = document.querySelectorAll(".card");
+
+            cards.forEach(card => {
+                const title = card.querySelector("h3").innerText.toLowerCase();
+                const desc = card.querySelector("p").innerText.toLowerCase();
+
+                if (title.includes(value) || desc.includes(value)) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+
+            const cards = document.querySelectorAll(".card");
+            const solved = cards.length;
+            const total = 100; // change later if needed
+
+            const percent = (solved / total) * 100;
+
+            document.getElementById("progress-text").innerText =
+                `Progress: ${solved}/${total}`;
+
+            document.getElementById("progress-fill").style.width =
+                percent + "%";
+        });
     </script>
 
 </body>

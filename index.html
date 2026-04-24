@@ -23,46 +23,68 @@
     <!-- Hero Section -->
     <section class="hero">
         <h1>Hi, I'm <span id="typing"></span></h1>
-        <p>Aspiring Red Teamer | Web Security Learner</p>
+
+        <p class="hero-sub">
+            Web Application Security Learner focused on real-world exploitation & bug bounty.
+        </p>
+
+        <p class="hero-small">
+            Solved 25+ PortSwigger labs | Practicing Authentication & Access Control vulnerabilities
+        </p>
+        <div class="stats">
+            <div>
+                <h3>25+</h3>
+                <p>Labs Solved</p>
+            </div>
+            <div>
+                <h3>3+</h3>
+                <p>Categories</p>
+            </div>
+            <div>
+                <h3>100%</h3>
+                <p>Hands-on Learning</p>
+            </div>
+        </div>
 
         <div class="buttons">
-            <a href="writeups.html" class="btn">View Writeups</a>
+            <a href="writeups.html" class="btn">Explore Writeups</a>
             <a href="about.html" class="btn-outline">My Journey</a>
         </div>
     </section>
     <!-- Writeups Section -->
-    <section class="writeups reveal"></section>
-    <h2>Latest Writeups</h2>
+    <section class="writeups">
+        <h2>Latest Writeups</h2>
 
-    <div class="card-container">
+        <div class="card-container">
 
-        <!-- Card 1 -->
-        <div class="card">
-            <h3>IDOR Lab</h3>
-            <p>Escalate privileges by editing role data inside user profile.</p>
-            <span class="tag">Easy</span>
-            <a href="writeups/Access-control/user-role-can-be-modified-in-user-profile.html">Read More →</a>
+            <!-- Card 1 -->
+            <div class="card">
+                <h3>IDOR Lab</h3>
+                <p>Escalate privileges by editing role data inside user profile.</p>
+                <span class="tag easy">Easy</span>
+                <a href="writeups/Access-control/user-role-can-be-modified-in-user-profile.html">Read More →</a>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card">
+                <h3>Auth Bypass</h3>
+                <p>multiple credential per request attack.</p>
+                <span class="tag hard">expert</span>
+                <a href="writeups/authentication/Broken-brute-force-protection-multiple-credential-per-request.html">Read
+                    More →</a>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card">
+                <h3>XSS Attack</h3>
+                <p>Forging requests using victim session.</p>
+                <span class="tag medium">Medium</span>
+                <a
+                    href="writeups/XSS/Reflected-XSS-into-a-JavaScript-string-with-single-quote-and-backslash-escaped.html">Read
+                    More →</a>
+            </div>
+
         </div>
-
-        <!-- Card 2 -->
-        <div class="card">
-            <h3>Auth Bypass</h3>
-            <p>multiple credential per request attack.</p>
-            <span class="tag">expert</span>
-            <a href="writeups/authentication/Broken-brute-force-protection-multiple-credential-per-request.html">Read
-                More →</a>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="card">
-            <h3>XSS Attack</h3>
-            <p>Forging requests using victim session.</p>
-            <span class="tag">Medium</span>
-            <a href="writeups/XSS/Reflected-XSS-into-a-JavaScript-string-with-single-quote-and-backslash-escaped.html">Read
-                More →</a>
-        </div>
-
-    </div>
     </section>
     <section class="terminal">
         <p id="terminal-text"></p>

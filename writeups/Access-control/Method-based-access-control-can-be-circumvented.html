@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Method-based Access Control Circumvention</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776923818/Screenshot_2026-04-23_10_55_03_a56tth.png">
+            <div>
+                <p>This lab implements access controls based partly on the HTTP method of the request. You can bypass
+                    these controls by using a different HTTP method to perform privileged actions.</p>
+                <p>Goal: Use a regular user session (<code>wiener</code>) to promote <code>carlos</code> to an
+                    administrator by bypassing the method-based restriction.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776923850/Screenshot_2026-04-23_10_47_19_svidek.png">
+            <div>
+                <p>Developers often assume that sensitive actions (like promoting a user) will only ever be sent via a
+                    <code>POST</code> request. They might configure their security rules to block
+                    <code>POST /admin-roles</code> for non-admin users, but forget to block
+                    <code>GET /admin-roles</code>.
+                </p>
+                <p>By switching the request method and moving the parameters from the body to the URL (Query String), we
+                    can often slip past these narrow security filters.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776923832/Screenshot_2026-04-23_10_50_45_gattcr.png">
+            <div>
+                <p>1. <strong>Capture Admin Request:</strong> Log in as <code>administrator:admin</code>. Go to the
+                    Admin Panel and promote <code>carlos</code>. Capture this <code>POST /admin-roles</code> request in
+                    Burp Suite and send it to <strong>Repeater</strong>.</p>
+                <p>2. <strong>Get Non-Admin Session:</strong> Open a private/incognito window and log in as
+                    <code>wiener:peter</code>. Open Developer Tools (F12) > Storage > Cookies and copy the
+                    <code>session</code> ID for Wiener.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776923829/Screenshot_2026-04-23_10_54_51_xxmakg.png">
+            <div>
+                <p>3. <strong>Test for Bypass:</strong> In Burp Repeater, replace the Administrator's session cookie
+                    with Wiener's session cookie. Send the request. You will receive an "Unauthorized" or "Access
+                    Denied" error because <code>POST</code> is restricted.</p>
+                <p>4. <strong>Switch Method:</strong> Right-click the request in Burp and select <strong>"Change request
+                        method"</strong>. This will convert the <code>POST</code> to a <code>GET</code> request.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776923834/Screenshot_2026-04-23_11_02_27_oldspe.png">
+            <div>
+                <p>5. <strong>Adjust Parameters:</strong> In a <code>GET</code> request, the body is ignored. You must
+                    move the parameters to the URL.
+                    <br>Original: <code>username=carlos&action=upgrade</code> in body.
+                    <br>Modified: <code>/admin-roles?username=wiener&action=upgrade</code> in the GET path.
+                </p>
+                <p>6. <strong>Execute Exploit:</strong> Ensure Wiener's session cookie is still there and send the
+                    request. You should see a <code>302 Found</code> redirect, indicating success.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776923806/Screenshot_2026-04-23_11_03_01_evuhuc.png">
+            <div>
+                <p>7. <strong>Verification:</strong> Refresh the page in Wiener's browser. If the exploit worked, Carlos
+                    will now have administrative privileges and the lab will be solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left">
+            <div>
+                <p>This vulnerability occurs because the application's security framework is configured to perform
+                    <strong>Method-Specific Authorization</strong>. Instead of checking if "User X can access Function
+                    Y," it checks if "User X can use Method Z on Function Y." This is a flawed approach. Attackers can
+                    often use alternative methods like <code>GET</code>, <code>HEAD</code>, or even <code>POST</code>
+                    (if it was a GET-only check) to trigger the same backend logic while bypassing the firewall.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Method-Agnostic Access Control:</strong> Ensure that
+                    authorization checks are applied to the resource or function itself, regardless of which HTTP method
+                    is used to access it.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Strict Method Enforcement:</strong> If an endpoint is
+                    only supposed to accept <code>POST</code>, explicitly reject all other methods at the routing level
+                    with a <code>405 Method Not Allowed</code> response.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Standardized Routing:</strong> Use modern frameworks
+                    that automatically handle session validation before any business logic is executed, ensuring uniform
+                    security across all request types.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Method-based access control can be circumvented";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+</body>
+
+</html>

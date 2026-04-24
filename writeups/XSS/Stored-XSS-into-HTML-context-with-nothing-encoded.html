@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>XSS | Stored XSS into HTML context with nothing encoded</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Cross-Site Scripting | Apprentice</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777000112/Screenshot_24-4-2026_82156_portswigger.net_a38055.jpg">
+            <div>
+                <p>This lab contains a stored cross-site scripting vulnerability in the comment functionality. Unlike
+                    reflected XSS, the malicious script is stored on the server's database and executed in the browser
+                    of anyone who views the blog post.</p>
+                <p>Goal: Inject a stored XSS payload that triggers an <code>alert()</code> box for anyone viewing the
+                    comments.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777000114/Screenshot_2026-04-24_08_28_37_te1d2b.png">
+            <div>
+                <p>Stored XSS occurs when an application receives data from a user and includes that data within its
+                    later HTTP responses in an unsafe way. In a comment section, if the server doesn't sanitize the
+                    input, our <code>&lt;script&gt;</code> tag becomes a permanent part of the page's HTML.</p>
+                <p>The strategy is to find a form that saves data to the server—like a comment box—and see if the
+                    "nothing encoded" rule applies here as well. If it does, every visitor to this post becomes a victim
+                    of our script.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777000110/Screenshot_2026-04-24_08_30_17_xtz4uz.png">
+            <div>
+                <p>1. <strong>Select a Target Post:</strong> On the home page, click on any blog post to view its full
+                    content and the comment section below it.</p>
+                <p>2. <strong>Prepare the Payload:</strong> Scroll down to the "Leave a comment" section. In the comment
+                    text area, enter:
+                    <br><code>&lt;script&gt;alert("hacked")&lt;/script&gt;</code>
+                </p>
+                <p>3. <strong>Submit the Data:</strong> Fill in the Name, Email, and Website fields with random
+                    information and click <strong>"Post Comment"</strong>.</p>
+                <p>4. <strong>Trigger and Verify:</strong> Once the comment is posted, navigate back to the blog post or
+                    refresh the page. An alert box with "hacked" will appear immediately. The lab is now solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777000110/Screenshot_2026-04-24_08_30_44_q5nwq0.png">
+            <div>
+                <p>The vulnerability exists because the application performs <strong>No Input Validation</strong> and
+                    <strong>No Output Encoding</strong>. When the server retrieves the comment from the database to
+                    display it to users, it inserts the raw string directly into the HTML template.
+                </p>
+                <p>Because the characters <code>&lt;</code> and <code>&gt;</code> are not converted to HTML entities,
+                    the browser's HTML parser treats the injected string as a legitimate script block. This is "Stored"
+                    because the attack persists even after the initial request is finished.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Context-Aware Output Encoding:</strong> Encode all
+                    user-supplied data before rendering it in HTML. <code>&lt;</code> should become
+                    <code>&amp;lt;</code>.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Sanitize HTML:</strong> If users are allowed to use some
+                    HTML (like bold or italics), use a library to "clean" the input and strip out dangerous tags like
+                    <code>&lt;script&gt;</code> or <code>&lt;iframe&gt;</code>.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Content Security Policy (CSP):</strong> Implement a
+                    strong CSP to prevent the execution of inline scripts and unauthorized external scripts.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: Stored XSS into HTML context with nothing encoded";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>XSS | Reflected XSS into HTML context with nothing encoded</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Cross-Site Scripting | Apprentice</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776999284/Screenshot_24-4-2026_8214_portswigger.net_yrvc9u.jpg">
+            <div>
+                <p>This lab contains a simple reflected cross-site scripting (XSS) vulnerability in the search
+                    functionality. The application takes a search term and reflects it directly into the HTML response
+                    without any sanitization or encoding.</p>
+                <p>Goal: Perform a reflected XSS attack that calls the <code>alert()</code> function to prove the
+                    vulnerability exists.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776999285/Screenshot_2026-04-24_08_08_49_nsg00k.png">
+            <div>
+                <p>When an application reflects your input back to the screen, the first thing to test is if the browser
+                    interprets that input as data or as code. By inputting HTML tags like <code>&lt;script&gt;</code>,
+                    we are testing if the server properly "escapes" special characters.</p>
+                <p>Since this lab has "nothing encoded," the browser will see our script tag and execute the JavaScript
+                    within it immediately upon loading the search results page.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776999287/Screenshot_2026-04-24_08_09_10_om29db.png">
+            <div>
+                <p>1. <strong>Locate Input Field:</strong> Go to the lab's home page and find the search box. This is
+                    our primary entry point for the payload.</p>
+                <p>2. <strong>Inject Payload:</strong> In the search bar, type the following payload:
+                    <br><code>&lt;script&gt;alert("hacked")&lt;/script&gt;</code>
+                </p>
+                <p>3. <strong>Trigger the Exploit:</strong> Press Enter or click the "Search" button. The page will
+                    reload, and you will see a pop-up alert box with the message "hacked". The lab is now solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776999272/Screenshot_2026-04-24_08_19_32_wxcizc.png">
+            <div>
+                <p>The core issue here is the lack of <strong>Output Encoding</strong>. When you search for a term, the
+                    server sends back a response like:
+                    <code>&lt;h1&gt;0 results for [YOUR_SEARCH_TERM]&lt;/h1&gt;</code>.
+                </p>
+                <p>Because the server does not encode characters like <code>&lt;</code> and <code>&gt;</code> into
+                    <code>&amp;lt;</code> and <code>&amp;gt;</code>, the browser interprets our input as a valid script
+                    block rather than plain text. This is a classic <strong>Reflected XSS</strong> because the payload
+                    is "reflected" off the web server to the victim's browser.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Filter Input on Arrival:</strong> Implement strict
+                    allow-lists for user input to reject any unexpected characters or tags.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Encode Output on Display:</strong> Use context-aware
+                    encoding. Convert special HTML characters into their entity equivalents before rendering them in the
+                    browser.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Content Security Policy (CSP):</strong> Use CSP headers
+                    to restrict which scripts can execute on your page, effectively disabling inline scripts like the
+                    one used in this exploit.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        // Typing Title Animation
+        const titleText = "Lab: Reflected XSS into HTML context with nothing encoded";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        // Scroll Reveal Animation
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        // Fullscreen Image Logic
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

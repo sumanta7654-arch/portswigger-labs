@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Data Leakage in Redirect</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776752154/Screenshot_2026-04-21_11_25_43_l8ndln.png">
+            <div>
+                <p>This lab is vulnerable to horizontal privilege escalation. When a user attempts to access another
+                    user's profile, the application initiates a redirect to the login page. However, it still includes
+                    the target user's data in the response body before the redirect happens.</p>
+                <p>Goal: Access <code>carlos</code>'s account page, find the leaked API key in the HTTP response, and
+                    submit it.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776752126/Screenshot_2026-04-21_11_27_16_tcamdk.png">
+            <div>
+                <p>Sometimes, developers implement security checks that only "look" secure. In this case, the server
+                    sees an unauthorized request and says, "Go to the login page" (a 302 Redirect). But the server-side
+                    code is poorly written—it fetches the user's data first and attaches it to the response body
+                    <strong>before</strong> sending the redirect command.
+                </p>
+                <p>Our strategy is to use Burp Suite to catch that "in-between" response. While your browser
+                    automatically follows the redirect and shows the login page, Burp Suite allows us to inspect the
+                    original response containing the leaked data.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776752207/Screenshot_2026-04-21_11_30_21_htkeem.png">
+            <div>
+                <p>1. <strong>Initial Login:</strong> Log in with <code>wiener:peter</code>. Navigate to your account
+                    page. Observe the URL: <code>/my-account?id=wiener</code>.</p>
+                <p>2. <strong>Attempt Access:</strong> Manually change the URL parameter to <code>id=carlos</code>.
+                    Notice that the browser immediately kicks you back to the <code>/login</code> page. This looks like
+                    a successful security measure at first glance.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776752163/Screenshot_2026-04-21_11_30_53_vjvovb.png">
+            <div>
+                <p>3. <strong>Analyze with Burp:</strong> Go to Burp Suite's <strong>HTTP History</strong>. Look for the
+                    <code>GET /my-account?id=carlos</code> request. You will see a <code>302 Found</code> status code.
+                </p>
+                <p>4. <strong>Inspect Response Body:</strong> Click on that 302 request and look at the
+                    <strong>Response</strong> tab. Scroll down past the headers. You will see the full HTML of Carlos's
+                    account page, including his **API Key**, hidden right there in the body!
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776752154/Screenshot_2026-04-21_11_31_05_uplq0z.png">
+            <div>
+                <p>5. <strong>Solve the Lab:</strong> Copy the leaked API key from the Burp response. Go back to the
+                    lab, click "Submit solution", and paste the key. The lab is now solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right">
+            <div>
+                <p>This is a classic <strong>Information Disclosure</strong> vulnerability. The server's logic is
+                    executing in the wrong order: it generates the sensitive content <code>(render_profile_page)</code>
+                    and then realizes the user isn't authorized <code>(redirect_to_login)</code>. Because the content is
+                    already in the buffer, it gets sent along with the redirect header. A secure application should
+                    terminate the request immediately without sending any profile data if authorization fails.</p>
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Early Authorization:</strong> Perform authorization
+                    checks at the very beginning of the request handling process, before any sensitive data is retrieved
+                    or rendered.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Atomic Redirects:</strong> When sending a redirect
+                    header (like <code>Location: /login</code>), ensure the response body is empty or contains only a
+                    generic message. Use <code>exit()</code> or <code>return</code> immediately after the redirect
+                    command.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Secure Coding Practices:</strong> Avoid "leaky" logic
+                    where error messages or redirect responses provide more information than necessary to the client.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: User ID controlled by request parameter with data leakage in redirect";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+</body>
+
+</html>

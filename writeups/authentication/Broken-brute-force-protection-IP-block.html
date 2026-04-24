@@ -8,6 +8,13 @@
 </head>
 
 <body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
     <div class="writeup-container">
 
         <h1 id="typing-title"></h1>
@@ -27,7 +34,8 @@
 
         <h2 class="section-title">Mindset & Strategy</h2>
         <div class="feed right reveal">
-            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225009/Screenshot_2026-04-15_08_14_00_hzzwve.png">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225009/Screenshot_2026-04-15_08_14_00_hzzwve.png">
             <div>
                 <p>The core logic of this vulnerability is a <strong>Counter Reset Flaw</strong>. The server tracks
                     consecutive failures. If we fail twice and then succeed once with our own account
@@ -40,7 +48,8 @@
 
         <h2 class="section-title">Step-By-Step-Execution</h2>
         <div class="feed left reveal">
-            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225046/Screenshot_2026-04-15_08_18_44_qvgd56.png">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225046/Screenshot_2026-04-15_08_18_44_qvgd56.png">
             <div>
                 <p>1. <strong>Intercept & Analyze:</strong> Log in with <code>wiener:peter</code> and capture the POST
                     request. Send it to Repeater and observe that after 3 wrong attempts, the server blocks the IP.
@@ -52,7 +61,8 @@
         </div>
 
         <div class="feed right reveal">
-            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225069/Screenshot_2026-04-15_09_03_47_y0towu.png">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225069/Screenshot_2026-04-15_09_03_47_y0towu.png">
             <div>
                 <p>3. <strong>Intruder Configuration:</strong> Set the attack type to <strong>Pitchfork</strong>. Set
                     Payload 1 on the <code>username</code> parameter and Payload 2 on the <code>password</code>
@@ -65,7 +75,8 @@
         </div>
 
         <div class="feed left reveal">
-            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225092/Screenshot_2026-04-15_09_11_15_dieewp.png">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225092/Screenshot_2026-04-15_09_11_15_dieewp.png">
             <div>
                 <p>5. <strong>Resource Pool:</strong> This is critical. Go to the <strong>Resource Pool</strong> tab and
                     set <strong>Maximum concurrent requests to 1</strong>. If we send requests in parallel, the sequence
@@ -76,7 +87,8 @@
         </div>
 
         <div class="feed right reveal">
-            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225017/Screenshot_2026-04-15_09_13_45_fczkkm.png">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776225017/Screenshot_2026-04-15_09_13_45_fczkkm.png">
             <div>
                 <p>7. <strong>Identify the Password:</strong> Sort the results by the <code>carlos</code> username. Look
                     for a <code>302 Redirect</code> status code that isn't our own account. That is the correct password
@@ -144,6 +156,22 @@
         }
         window.addEventListener("load", typeTitle);
     </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
 
 </body>
 

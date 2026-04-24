@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Multi-step Process Bypass</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776948005/Screenshot_23-4-2026_1815_portswigger.net_qvngnm.jpg">
+            <div>
+                <p>This lab contains a multi-step process for changing user roles. While the initial step is protected,
+                    the final confirmation step lacks proper access control. This allows a low-privileged user to skip
+                    the checks and perform administrative actions.</p>
+                <p>Goal: Exploit the unprotected confirmation step to promote your own user (<code>wiener</code>) to an
+                    administrator.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776947924/Screenshot_2026-04-23_17_13_38_xsz8i5.png">
+            <div>
+                <p>Developers often assume that users will only reach the final step of a process if they have
+                    successfully completed the previous steps. This is a <strong>Security through Workflow</strong>
+                    fallacy.</p>
+                <p>Our strategy is to capture the "Confirmation" request as an admin, which actually executes the role
+                    change, and then replay that specific request using a non-admin session cookie. If the backend
+                    doesn't re-verify permissions at the confirmation stage, we bypass the entire security check.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776947997/Screenshot_2026-04-23_17_15_42_xwgjjt.png">
+            <div>
+                <p>1. <strong>Capture the Final Action:</strong> Log in as <code>administrator:admin</code>. Go to the
+                    Admin Panel and promote <code>carlos</code>. When the confirmation prompt appears, click **Yes**.
+                    Capture this <code>POST /admin-roles</code> request in Burp Suite (look for
+                    <code>confirmed=true</code>).
+                </p>
+                <p>2. <strong>Analyze in Repeater:</strong> Send this confirmation request to Repeater. Notice it
+                    contains the administrative action logic but is a separate request from the initial promotion
+                    selection.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776948002/Screenshot_2026-04-23_17_17_07_bhita8.png">
+            <div>
+                <p>3. <strong>Acquire Low-Privilege Session:</strong> Log out and sign in with your own account:
+                    <code>wiener:peter</code>. Use the browser inspector (F12 > Storage > Cookies) or Burp to copy your
+                    <strong>Session ID</strong>.
+                </p>
+                <p>4. <strong>Session Hijacking in Request:</strong> Go back to Burp Repeater. Replace the
+                    Administrator's session cookie with your <code>wiener</code> session ID. Then, change the
+                    <code>username</code> parameter from <code>carlos</code> to <code>wiener</code>.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776947935/Screenshot_2026-04-23_17_17_57_vgvv9s.png">
+            <div>
+                <p>5. <strong>Execute Bypass:</strong> Send the modified request. The server should process this without
+                    verifying if <code>wiener</code> has permission, as it assumes the "Check" was already done in the
+                    previous step. You will see a <code>302 Found</code> response.</p>
+                <p>6. <strong>Verify Status:</strong> Open the response in your browser. You will notice that
+                    <code>wiener</code> is now an administrator. The lab is successfully solved.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776947931/Screenshot_2026-04-23_17_18_11_hl38ny.png">
+            <div>
+                <p>7. <strong>Technical Summary:</strong> This vulnerability is a classic <strong>Broken Access
+                        Control</strong>. Every request in a stateful transaction must be independently authorized.
+                    Relying on the user's progress through a UI workflow is never a substitute for server-side
+                    permission checks.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Continuous Authorization:</strong> Implement server-side
+                    access control checks at every single step of a multi-step process, especially on the final
+                    execution endpoint.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>State Verification:</strong> Use cryptographically
+                    secure tokens or server-side session variables to track the state of a process, ensuring it cannot
+                    be bypassed or tampered with.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Role-Based Access Control (RBAC):</strong> Ensure that
+                    the promotion logic is strictly reserved for users with the 'Administrator' role at the API/endpoint
+                    level.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        // Typing Title Animation
+        const titleText = "Lab: Multi-step process with no access control on one step";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        // Scroll Reveal Animation
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        // Fullscreen Image Logic
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | User ID Controlled by Request Parameter</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Apprentice</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776748439/Screenshot_21-4-2026_104110_portswigger.net_c2cuam.jpg">
+            <div>
+                <p>This lab is vulnerable to horizontal privilege escalation. The user profile page is retrieved based
+                    on a <code>id</code> parameter in the URL, but the server fails to check if the requesting user has
+                    permission to view that profile.</p>
+                <p>Goal: Access <code>carlos</code>'s account page, retrieve his API key, and submit it to solve the
+                    lab.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776748430/Screenshot_2026-04-21_10_16_52_fsytx7.png">
+            <div>
+                <p>Horizontal Privilege Escalation happens when a user can access data belonging to another user with
+                    the same level of permissions. This is often due to an <strong>Insecure Direct Object Reference
+                        (IDOR)</strong>.</p>
+                <p>The strategy is to find a unique identifier in the URL (like a username or UUID) and simply swap it
+                    with another user's identifier. If the backend doesn't validate the session against the requested
+                    ID, we can "impersonate" any user just by changing the URL.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776748446/Screenshot_2026-04-21_10_17_21_ps8ttv.png">
+            <div>
+                <p>1. <strong>Analyze Your Account:</strong> Log in with <code>wiener:peter</code>. Navigate to your
+                    account page. Notice the URL structure: <code>/my-account?id=wiener</code>. You can see your own API
+                    key on this page.</p>
+                <p>2. <strong>Manipulate the Parameter:</strong> Click on the browser's address bar. Manually change the
+                    value of the <code>id</code> parameter from <code>wiener</code> to <code>carlos</code> (i.e.,
+                    <code>/my-account?id=carlos</code>) and press Enter.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776748438/Screenshot_2026-04-21_10_17_39_vkxwhm.png">
+            <div>
+                <p>3. <strong>Extract Data:</strong> Because the application lacks proper authorization checks, you are
+                    now viewing Carlos's account page. Locate his <strong>API Key</strong> displayed on the screen and
+                    copy it.</p>
+                <p>4. <strong>Submit Solution:</strong> Click the "Submit solution" button at the top of the lab banner.
+                    Paste the copied API key into the input field and click OK.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776748431/Screenshot_2026-04-21_10_17_51_zhekmy.png">
+            <div>
+                <p>5. <strong>Lab Solved:</strong> Once the correct API key is submitted, the lab will be marked as
+                    completed. You have successfully performed an IDOR attack to steal sensitive information from
+                    another user.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right">
+            <div>
+                <p>The vulnerability exists because the application performs <strong>Authentication</strong> (checking
+                    who you are) but skips <strong>Authorization</strong> (checking what you are allowed to do). The
+                    server-side code likely fetches the user data based on the <code>id</code> parameter directly from
+                    the database without verifying if that <code>id</code> matches the user's current session token.</p>
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Session Validation:</strong> Instead of relying on a URL
+                    parameter, the application should retrieve the user's ID directly from their secure session object
+                    on the server.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Access Control Checks:</strong> If a parameter must be
+                    used, the backend must verify that the requested <code>id</code> belongs to the currently logged-in
+                    user before returning any sensitive data.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Non-Predictable IDs:</strong> Using random UUIDs
+                    instead of simple usernames makes it harder for an attacker to guess other valid identifiers, though
+                    this is "defense in depth" and not a primary fix.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: User ID controlled by request parameter";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+</body>
+
+</html>

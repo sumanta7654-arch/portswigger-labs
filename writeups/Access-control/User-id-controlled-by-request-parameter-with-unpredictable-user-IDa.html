@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Unpredictable User IDs</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776750458/Screenshot_21-4-2026_11153_portswigger.net_jzap07.jpg">
+            <div>
+                <p>This lab is vulnerable to horizontal privilege escalation via an IDOR vulnerability, but it uses
+                    unpredictable Globally Unique Identifiers (GUIDs) for user IDs. To exploit this, we must first
+                    discover another user's GUID.</p>
+                <p>Goal: Find <code>carlos</code>'s GUID, access his account page, and retrieve his API key.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776750441/Screenshot_2026-04-21_11_11_53_supdjo.png">
+            <div>
+                <p>Using unpredictable IDs like GUIDs (e.g., <code>035aefad-8ab2...</code>) adds a layer of security
+                    through obscurity. It prevents an attacker from simply guessing the next ID. However, if the
+                    application displays these IDs anywhere in the public interface, they lose their protective value.
+                </p>
+                <p>Our strategy is <strong>Reconnaissance</strong>. We will look for any part of the website where
+                    Carlos's activity is shown (like a blog post) to see if the application reveals his unique ID in the
+                    background or the URL.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776750483/Screenshot_2026-04-21_11_13_01_x396yq.png">
+            <div>
+                <p>1. <strong>Baseline Check:</strong> Log in with <code>wiener:peter</code>. Notice your URL is
+                    <code>/my-account?id=[YOUR-GUID]</code>. If you try to change the ID to something random, the server
+                    redirects you back to the login page, proving you need a valid GUID.
+                </p>
+                <p>2. <strong>Finding the Target GUID:</strong> Go back to the home page. Find a blog post written by
+                    <code>carlos</code> and click on his name to view his profile. Look at the URL; it will look like
+                    <code>/blogs?userId=035aefad-8ab2-4c13-ac63-24825dc00a9e</code>. Copy this GUID.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776750440/Screenshot_2026-04-21_11_13_32_fnnea1.png">
+            <div>
+                <p>3. <strong>Execute IDOR:</strong> Go back to your "My Account" page. In the address bar, replace your
+                    own GUID with the one you just copied from Carlos's profile. Press Enter.</p>
+                <p>4. <strong>Data Extraction:</strong> You are now successfully viewing Carlos's account page. Copy the
+                    **API Key** displayed on the screen.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776750445/Screenshot_2026-04-21_11_14_00_et95zq.png">
+            <div>
+                <p>5. <strong>Submit & Solve:</strong> Click "Submit solution" in the lab banner, paste the API key, and
+                    click OK. The lab is now solved. You have demonstrated that unpredictable IDs are not a valid
+                    defense if they are leaked elsewhere.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right">
+            <div>
+                <p>The vulnerability here is still **Insecure Direct Object Reference**. Although the ID is hard to
+                    guess, the server still doesn't check if the GUID in the URL matches the one stored in the user's
+                    session. The application blindly trusts that anyone who knows the GUID must be authorized to see
+                    that account, which is a flawed assumption in a public-facing system.</p>
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Server-Side Authorization:</strong> Always verify that
+                    the requested resource ID matches the ID of the authenticated user in the current session.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Avoid ID Leakage:</strong> If sensitive actions are tied
+                    to a GUID, ensure that the GUID isn't exposed in public areas like blog posts or profile URLs unless
+                    absolutely necessary.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Indirect References:</strong> Map internal IDs to
+                    temporary, session-specific "aliases" so that the real database ID is never exposed to the client.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: User ID controlled by request parameter, with unpredictable user IDs";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+</body>
+
+</html>

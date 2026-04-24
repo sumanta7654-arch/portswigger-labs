@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Insecure Direct Object References (IDOR)</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776831077/Screenshot_22-4-2026_9391_portswigger.net_r79vsp.jpg">
+            <div>
+                <p>This lab stores user chat transcripts directly on the server's file system and retrieves them using
+                    static filenames. It fails to implement proper access controls, allowing any user to view
+                    transcripts belonging to others.</p>
+                <p>Goal: Find <code>carlos</code>'s password in a leaked chat transcript and use it to log in to his
+                    account.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776831070/Screenshot_2026-04-22_09_24_10_e15xhs.png">
+            <div>
+                <p>IDOR occurs when an application provides direct access to objects based on user-supplied input. In
+                    this case, the object is a <code>.txt</code> file. If we see a pattern like <code>1.txt</code>,
+                    <code>2.txt</code>, it is highly likely that <code>1.txt</code> belongs to another user or session.
+                </p>
+                <p>By simply decrementing or guessing the numeric filename in the request, we can bypass the UI and talk
+                    directly to the server's storage to extract private conversations.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776831079/Screenshot_2026-04-22_09_29_16_uaqjdr.png">
+            <div>
+                <p>1. <strong>Generate Traffic:</strong> Access the lab and go to the <strong>Live Chat</strong>
+                    section. Send a few messages and then click on the <strong>"View transcript"</strong> button. A file
+                    (e.g., <code>2.txt</code>) will be downloaded to your system.</p>
+                <p>2. <strong>Intercept Request:</strong> In Burp Suite, locate the
+                    <code>GET /download-transcript/2.txt</code> request in your HTTP history. Send this request to
+                    <strong>Repeater</strong>.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776831079/Screenshot_2026-04-22_09_31_27_urcyxk.png">
+            <div>
+                <p>3. <strong>Manipulate ID:</strong> In Repeater, change the filename from <code>2.txt</code> to
+                    <code>1.txt</code>. Send the modified request. Look at the response body—you will see a chat
+                    transcript between Carlos and a support agent.
+                </p>
+                <p>4. <strong>Extract Password:</strong> Read through the transcript carefully. Carlos likely shared his
+                    password with the agent. Copy the password (e.g., <code>zjo406yppp9tox0q6a9n</code>).</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776831073/Screenshot_2026-04-22_09_34_18_kk6igv.png">
+            <div>
+                <p>5. <strong>Account Takeover:</strong> Go to the <strong>Login</strong> page. Use the stolen
+                    credentials: <code>carlos:zjo406yppp9tox0q6a9n</code>. Once logged in, the lab will be marked as
+                    solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right">
+            <div>
+                <p>The vulnerability exists because the application uses a <strong>Direct Object Reference</strong> (the
+                    filename) to retrieve data without an <strong>Authorization Layer</strong>. The server assumes that
+                    if a user knows the filename, they must have the right to see it. A secure implementation should map
+                    these files to specific user sessions or use non-guessable, random identifiers (UUIDs) while still
+                    verifying ownership on the server side.</p>
+            </div>
+        </div>
+
+        <div class="feed left">
+            <div>
+                <h2 class="section-title">How To Fix</h2>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Indirect Object References:</strong> Map internal files
+                    to temporary, session-specific keys that only work for the authorized user.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Access Control:</strong> Before serving a file, the
+                    server must check if the authenticated user has the permissions required to access that specific
+                    resource.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Non-Predictable Names:</strong> Use long, random strings
+                    or GUIDs for filenames so that they cannot be guessed by incrementing numbers.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+    <script>
+        window.addEventListener("load", () => {
+            document.body.classList.add("loaded");
+        });
+    </script>
+    <script>
+        const titleText = "Lab: Insecure direct object references (IDOR)";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+    </script>
+    <script>
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+</body>
+
+</html>

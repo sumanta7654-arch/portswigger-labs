@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Access Control | Referer-based Access Control Bypass</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Access Control | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949620/Screenshot_23-4-2026_1828_portswigger.net_cbb5bn.jpg">
+            <div>
+                <p>This lab controls access to administrative functions based on the <code>Referer</code> header. By
+                    spoofing this header, a regular user can bypass access controls and perform sensitive actions.</p>
+                <p>Goal: Use the <code>wiener</code> user session to promote yourself to an administrator by
+                    manipulating the <code>Referer</code> header in the request.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949583/Screenshot_2026-04-23_18_15_05_vsdjtt.png">
+            <div>
+                <p>The <code>Referer</code> header is an HTTP request header that identifies the address of the web page
+                    from which the link to the currently requested page was followed. Some applications incorrectly
+                    trust this header to verify that a request originated from a trusted page (like the admin panel).
+                </p>
+                <p>Since the <code>Referer</code> header is sent by the browser, it is entirely under the user's
+                    control. We can use Burp Suite to change its value and trick the server into thinking we are
+                    performing the action from the authorized administrator dashboard.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949610/Screenshot_2026-04-23_18_17_48_ssrth4.png">
+            <div>
+                <p>1. <strong>Analyze Admin Flow:</strong> Log in as <code>administrator:admin</code>. Go to the Admin
+                    Panel and promote <code>carlos</code>. In Burp Suite, capture the
+                    <code>GET /admin-roles?username=carlos&action=upgrade</code> request and send it to
+                    <strong>Repeater</strong>.
+                </p>
+                <p>2. <strong>Identify the Security Check:</strong> Notice the <code>Referer: [URL]/admin</code> header
+                    in the request. The server likely checks this header to decide whether to allow the role change.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949601/Screenshot_2026-04-23_18_18_43_pof6re.png">
+            <div>
+                <p>3. <strong>Acquire Victim Session:</strong> Log out and sign in as <code>wiener:peter</code>. Use the
+                    browser inspector or Burp Suite to get your <code>wiener</code> session cookie.</p>
+                <p>4. <strong>Initial Bypass Attempt:</strong> In Burp Repeater, replace the Administrator's session
+                    cookie with your <code>wiener</code> session cookie. If you try to access <code>/admin</code>
+                    directly, the server will tell you that the interface is only for administrators.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949607/Screenshot_2026-04-23_18_23_37_cgzfsy.png">
+            <div>
+                <p>5. <strong>Spoofing the Referer:</strong> Go back to the captured <code>/admin-roles</code> request
+                    in Repeater. Change the <code>username</code> parameter to <code>wiener</code> and ensure your
+                    <code>wiener</code> session cookie is in place.
+                </p>
+                <p>6. <strong>Execute Attack:</strong> Ensure the <code>Referer</code> header is set to the admin panel
+                    URL (e.g., <code>https://[lab-id].web-security-academy.net/admin</code>). Send the request. The
+                    server sees the trusted Referer and allows the action.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776949614/Screenshot_2026-04-23_18_24_08_vgq7b8.png">
+            <div>
+                <p>7. <strong>Verification:</strong> You should see a <code>302 Found</code> response. Refresh the page
+                    in Wiener's browser. You are now an administrator, and the lab is solved. This proves that
+                    <code>Referer</code> headers should never be used for security-critical authorization.
+                </p>
+            </div>
+        </div>
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1776835644/Screenshot_2026-04-22_10_27_12_qb0bo3.png">
+            <div>
+                <p>This vulnerability is a classic case of <strong>Insecure Authorization</strong> based on untrusted
+                    metadata. The application's security logic is flawed because it assumes that if a request originates
+                    from <code>/admin</code> (as indicated by the <code>Referer</code> header), the user must already be
+                    an administrator.</p>
+
+                <p>Since the <code>Referer</code> header is a client-side component, it can be easily manipulated using
+                    tools like Burp Suite. When we manually set the Referer to the admin path, we effectively bypass the
+                    "Where did this request come from?" check without ever having to prove "Who is making this request?"
+                    via a secure session role check.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Never Trust Headers:</strong> Never use client-side
+                    headers like <code>Referer</code> or <code>User-Agent</code> for access control decisions.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Session-Based Authorization:</strong> Check the user's
+                    role and permissions directly from the secure, server-side session data before executing any
+                    privileged function.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>CSRF Protection:</strong> Use anti-CSRF tokens to ensure
+                    requests are intentional and come from authorized sessions, rather than relying on weak header
+                    checks.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        // Typing Title Animation
+        const titleText = "Lab: Referer-based access control";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        // Scroll Reveal Animation
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        // Fullscreen Image Logic
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>
