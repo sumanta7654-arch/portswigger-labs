@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>XSS | DOM XSS in document.write sink using source location.search</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Cross-Site Scripting | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777277153/Screenshot_2026-04-27_13_07_53_pqqtc3.png">
+            <div>
+                <p>This lab contains a DOM-based cross-site scripting vulnerability in the search query tracking
+                    functionality. It uses the JavaScript <code>document.write</code> function, which writes data to the
+                    page. The data is read from <code>location.search</code>, which you can control via the URL.</p>
+                <p>Goal: Perform a DOM XSS attack that breaks out of the existing <code>img</code> tag and calls the
+                    <code>alert()</code> function.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777277158/Screenshot_2026-04-27_13_09_26_rnw8v6.png">
+            <div>
+                <p>In DOM-based XSS, the payload is never sent to the server. Instead, it is processed entirely by the
+                    browser's JavaScript. The "Source" is <code>location.search</code> (the query string), and the
+                    "Sink" is <code>document.write</code>.</p>
+                <p>Our strategy is to inspect the JavaScript handling the search term. If the code places our input
+                    inside an attribute (like <code>src</code>), we need to "break out" of that attribute and the tag
+                    itself using characters like <code>"</code> and <code>></code> before we can execute our own script.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777277141/Screenshot_2026-04-27_13_09_50_tuioh7.png">
+            <div>
+                <p>1. <strong>Analyze the Page Source:</strong> Go to the lab and perform a search for a random string.
+                    Right-click and select <strong>"View Page Source"</strong>. Look for the JavaScript responsible for
+                    the search tracking.</p>
+                <p>2. <strong>Identify the Vulnerable Code:</strong> You will find a script similar to:
+                    <br><code>document.write('&lt;img src="/resources/images/tracker.gif?searchTerms='+query+'"&gt;');</code>
+                    <br>This shows that our <code>query</code> is being placed directly inside the <code>src</code>
+                    attribute of an <code>img</code> tag.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777277148/Screenshot_2026-04-27_13_12_38_le9xm1.png">
+            <div>
+                <p>3. <strong>Craft the Breakout:</strong> If we just type a script, it remains trapped inside the
+                    <code>src</code> quotes. To fix this, we start our payload with <code>"&gt;</code>.
+                    <br>The first <code>"</code> closes the <code>src</code> attribute.
+                    <br>The <code>&gt;</code> closes the <code>img</code> tag entirely.
+                </p>
+                <p>4. <strong>Inject the Payload:</strong> Enter the following in the search bar:
+                    <br><code>"&gt;&lt;script&gt;alert("hacked")&lt;/script&gt;</code>
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777277146/Screenshot_2026-04-27_13_12_47_g6xwot.png">
+            <div>
+                <p>5. <strong>Execution:</strong> Press Enter. The browser's JavaScript will now write the following to
+                    the DOM:
+                    <br><code>&lt;img src="/resources/images/tracker.gif?searchTerms=""&gt;&lt;script&gt;alert("hacked")&lt;/script&gt;"&gt;</code>
+                </p>
+                <p>6. <strong>Verify Success:</strong> The original <code>img</code> tag is closed early, and your
+                    injected <code>&lt;script&gt;</code> executes immediately, triggering the "hacked" alert. The lab is
+                    solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777277148/Screenshot_2026-04-27_13_12_53_ubygl0.png">
+            <div>
+                <p>This is a <strong>DOM-based XSS</strong> vulnerability because the flaw exists in the client-side
+                    script's handling of data. The <code>document.write</code> sink is dangerous because it treats the
+                    input as HTML code rather than plain text. Because the code does not sanitize or escape the
+                    <code>"</code> and <code>&gt;</code> characters from the <code>location.search</code> source, an
+                    attacker can manipulate the DOM structure to execute arbitrary JavaScript[cite: 1].
+                </p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Avoid Dangerous Sinks:</strong> Instead of
+                    <code>document.write</code>, use safer alternatives like <code>textContent</code> or
+                    <code>innerText</code>, which do not parse input as HTML.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Modern APIs:</strong> Use
+                    <code>element.setAttribute()</code> for modifying attributes, which automatically handles encoding
+                    of special characters.
+                </p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Sanitization Libraries:</strong> If you must render HTML
+                    from a search query, use a library like DOMPurify to strip out dangerous tags and attributes before
+                    they reach the sink.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: DOM XSS in document.write sink using source location.search";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

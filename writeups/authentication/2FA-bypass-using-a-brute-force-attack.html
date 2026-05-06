@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MFA Bypass | 2FA bypass using a brute-force attack</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">Authentication | Expert</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363364/Screenshot_2026-04-28_12_30_56_gb0pdc.png">
+            <div>
+                <p>This lab's two-factor authentication is vulnerable to brute-forcing. However, the application has a
+                    security mechanism: after two failed MFA attempts, the user is logged out, and the session is
+                    invalidated. This prevents a standard automated attack.</p>
+                <p>Goal: Use Burp Suite Macros to automate the login process and brute-force the 4-digit MFA code for
+                    the user <code>carlos</code>.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363368/Screenshot_2026-04-28_12_33_39_xpdfbf.png">
+            <div>
+                <p>Brute-forcing a 4-digit code (0000-9999) is usually easy, but here the server resets our state every
+                    two tries. To bypass this, we need a <strong>Macro</strong>. A macro is a sequence of requests that
+                    Burp Suite runs automatically before every attack request.</p>
+                <p>The strategy is to tell Burp: "Before you try an MFA code, first go to the login page, submit
+                    Carlos's credentials, and get a fresh CSRF token and MFA session." By setting the <strong>Resource
+                        Pool</strong> to a single thread, we ensure the sequence never breaks.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363379/Screenshot_2026-04-28_12_35_06_aoeaai.png">
+            <div>
+                <p>1. <strong>Intercept the Flow:</strong> Turn on Burp Intercept. Log in with
+                    <code>carlos:montoya</code>. You will be sent to the MFA page (<code>/login2</code>). Enter any
+                    4-digit code and capture that request. Also, ensure you have captured the initial
+                    <code>GET /login</code> and <code>POST /login</code> requests in your HTTP history.
+                </p>
+                <p>2. <strong>Create the Macro:</strong> Go to <strong>Settings > Sessions > Macros</strong>. Click
+                    <strong>Add</strong>. Select the following three requests in order:
+                    <br>• <code>GET /login</code> (To get a fresh CSRF token)
+                    <br>• <code>POST /login</code> (To submit credentials)
+                    <br>• <code>GET /login2</code> (To land on the MFA entry page)
+                </p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363359/Screenshot_2026-04-28_12_35_51_prog6d.png">
+            <div>
+                <p>3. <strong>Configure Session Handling:</strong> Under <strong>Settings > Sessions > Session Handling
+                        Rules</strong>, click <strong>Add</strong>.
+                    <br>• In <strong>Scope</strong>, select "Intruder" and "Include all URLs".
+                    <br>• In <strong>Details</strong>, add a rule action: <strong>Run a macro</strong>. Select the macro
+                    you just created.
+                </p>
+                <p>4. <strong>Update Parameters:</strong> In the Macro configuration, ensure Burp is set to update the
+                    parameters (like CSRF tokens) from the previous responses automatically. This is crucial for the
+                    <code>POST /login</code> to succeed.
+                </p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363371/Screenshot_2026-04-28_12_38_25_rfwsyb.png">
+            <div>
+                <p>5. <strong>Set Up Intruder:</strong> Send the <code>POST /login2</code> request (the one with the MFA
+                    code) to Intruder.
+                    <br>• <strong>Positions:</strong> Highlight the 4-digit MFA code as the payload position.
+                    <br>• <strong>Payloads:</strong> Select "Numbers". Set range from <code>0</code> to
+                    <code>9999</code>. Set "Min integer digits" and "Max integer digits" to <code>4</code> to ensure it
+                    tries <code>0001</code>, <code>0002</code>, etc.
+                </p>
+                <p>6. <strong>Resource Pool (Critical):</strong> Go to the <strong>Resource Pool</strong> tab. Create a
+                    new pool and set <strong>Maximum concurrent requests to 1</strong>. If you use multiple threads, the
+                    macro sessions will overlap and fail.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363378/Screenshot_2026-04-28_12_50_48_abzptb.png">
+            <div>
+                <p>7. <strong>Launch the Attack:</strong> Start the attack. It will be slow because Burp is performing 4
+                    requests for every single code attempt. Monitor the <strong>Status Code</strong> or
+                    <strong>Length</strong> columns.
+                </p>
+                <p>8. <strong>Solve:</strong> When you find a <code>302 Found</code> status code, that is the correct
+                    MFA key. Right-click that request, select "Show response in browser," and paste the URL into your
+                    browser to log in as Carlos and solve the lab.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed left reveal">
+            <img
+                src="https://res.cloudinary.com/dyeouti4d/image/upload/v1777363378/Screenshot_2026-04-28_12_51_23_iofqik.png">
+            <div>
+                <p>This is an <strong>Expert-level Authentication Bypass</strong> because it defeats "Rate Limiting" and
+                    "Session Termination" defenses. The server correctly identifies an attack and kills the session, but
+                    it fails to implement a <strong>permanent lockout</strong> or a <strong>CAPTCHA</strong>. Because
+                    the application logic allows a user to immediately re-authenticate after a session reset, we can
+                    programmatically simulate a legitimate user login for every single brute-force attempt using Burp's
+                    session handling engine.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed right">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Progressive Delays:</strong> Implement increasing time
+                    delays after failed MFA attempts (e.g., 1 min, 5 min, 30 min).</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Account Lockout:</strong> Lock the account after a
+                    certain number of failed MFA attempts, regardless of whether the user re-logs in with their
+                    password.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Notification:</strong> Notify the user via email or SMS
+                    when multiple MFA attempts are detected, allowing them to secure their account.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: 2FA bypass using a brute-force attack";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

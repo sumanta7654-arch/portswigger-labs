@@ -117,8 +117,15 @@
             <div class="card reveal">
                 <h3>Broken brute-force protection, multiple credential per request</h3>
                 <p>Send multiple credentials in a single request to bypass brute-force protection.</p>
-                <span class="tag hard">Hard</span>
+                <span class="tag hard">expert</span>
                 <a href="writeups/authentication/Broken-brute-force-protection-multiple-credential-per-request.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>2FA bypass using a brute-force attack</h3>
+                <p>Send multiple credentials in a single request to bypass brute-force protection.</p>
+                <span class="tag hard">expert</span>
+                <a href="writeups/authentication/2FA-bypass-using-a-brute-force-attack.html">Read
                     More →</a>
             </div>
 
@@ -234,6 +241,22 @@
                 <a href="writeups/xss/Reflected-XSS-into-HTML-context-with-nothing-encoded.html">Read
                     More →</a>
             </div>
+
+            <div class="card reveal">
+                <h3>DOM XSS in document.write sink using source location.search</h3>
+                <p>Inject malicious script via input reflected inside JavaScript context.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/XSS/DOM-XSS-in-document-write-sink-using-source-location.search.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>DOM XSS in innerHTML sink using source location.search</h3>
+                <p>Inject malicious script via input reflected inside JavaScript context.</p>
+                <span class="tag medium">Medium</span>
+                <a href="writeups/xss/DOM-XSS-in-innerHTML-sink-using-source-location.search.html">Read
+                    More →</a>
+            </div>
+
             <div class="card reveal">
                 <h3>Reflected XSS</h3>
                 <p>Inject malicious script via input reflected inside JavaScript context.</p>
@@ -245,65 +268,83 @@
 
         </div>
 
-    </div>
+        <h2 class="section-heading">SQL injection</h2>
+        <div class="card-grid">
 
-    <!-- Reveal animation -->
-    <script>
-        function revealOnScroll() {
-            const reveals = document.querySelectorAll(".reveal");
+            <div class="card reveal">
+                <h3>SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</h3>
+                <p></p>
+                <span class="tag easy">easy</span>
+                <a href="writeups/SQL-INJECTION/SQL-injection-vulnerability-in-WHERE-clouse-allowing-retrieval-of-hidden-data.html">Read
+                    More →</a>
+            </div>
+            <div class="card reveal">
+                <h3>SQL injection vulnerability allowing login bypass</h3>
+                <p></p>
+                <span class="tag easy">easy</span>
+                <a href="writeups/SQL-INJECTION/SQL-injection-vulnerability-allowing-user-bypass-login.html">Read
+                    More →</a>
+            </div>
 
-            reveals.forEach((el) => {
-                const windowHeight = window.innerHeight;
-                const elementTop = el.getBoundingClientRect().top;
+        </div>
 
-                if (elementTop < windowHeight - 80) {
-                    el.classList.add("active");
-                } else {
-                    el.classList.remove("active");
-                }
+        <!-- Reveal animation -->
+        <script>
+            function revealOnScroll() {
+                const reveals = document.querySelectorAll(".reveal");
 
+                reveals.forEach((el) => {
+                    const windowHeight = window.innerHeight;
+                    const elementTop = el.getBoundingClientRect().top;
+
+                    if (elementTop < windowHeight - 80) {
+                        el.classList.add("active");
+                    } else {
+                        el.classList.remove("active");
+                    }
+
+                });
+            }
+
+            window.addEventListener("scroll", revealOnScroll);
+            window.addEventListener("DOMContentLoaded", revealOnScroll);
+        </script>
+        <script>
+            const searchInput = document.getElementById("search");
+
+            searchInput.addEventListener("keyup", function () {
+                const value = this.value.toLowerCase();
+
+                const cards = document.querySelectorAll(".card");
+
+                cards.forEach(card => {
+                    const title = card.querySelector("h3").innerText.toLowerCase();
+                    const desc = card.querySelector("p").innerText.toLowerCase();
+
+                    if (title.includes(value) || desc.includes(value)) {
+                        card.style.display = "block";
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
             });
-        }
+        </script>
+        <script>
+            window.addEventListener("load", () => {
 
-        window.addEventListener("scroll", revealOnScroll);
-        window.addEventListener("DOMContentLoaded", revealOnScroll);
-    </script>
-    <script>
-        const searchInput = document.getElementById("search");
+                const cards = document.querySelectorAll(".card");
+                const solved = cards.length;
+                const total = 100; // change later if needed
 
-        searchInput.addEventListener("keyup", function () {
-            const value = this.value.toLowerCase();
+                const percent = (solved / total) * 100;
 
-            const cards = document.querySelectorAll(".card");
+                document.getElementById("progress-text").innerText =
+                    `Progress: ${solved}/${total}`;
 
-            cards.forEach(card => {
-                const title = card.querySelector("h3").innerText.toLowerCase();
-                const desc = card.querySelector("p").innerText.toLowerCase();
-
-                if (title.includes(value) || desc.includes(value)) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
+                document.getElementById("progress-fill").style.width =
+                    percent + "%";
             });
-        });
-    </script>
-    <script>
-        window.addEventListener("load", () => {
-
-            const cards = document.querySelectorAll(".card");
-            const solved = cards.length;
-            const total = 100; // change later if needed
-
-            const percent = (solved / total) * 100;
-
-            document.getElementById("progress-text").innerText =
-                `Progress: ${solved}/${total}`;
-
-            document.getElementById("progress-fill").style.width =
-                percent + "%";
-        });
-    </script>
+        </script>
 
 </body>
 
