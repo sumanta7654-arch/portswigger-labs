@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | UNION Attack, Retrieving Data From Other Tables</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779358443/Screenshot_2026-05-21_14_42_59_fkxypk.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. The results from the query are returned directly in the application's response, allowing us to execute a <code>UNION</code> attack. We will leverage this behavior to exfiltrate sensitive credentials from a completely different database table.</p>
+                <p>Goal: Perform an SQL injection <code>UNION</code> attack to retrieve the usernames and passwords from the <code>users</code> table, then log in as the <code>administrator</code> user.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779358439/Screenshot_2026-05-21_14_44_44_h7jdqs.png">
+            <div>
+                <p>Once we know an endpoint maps user input directly into an SQL query, we can use the <code>UNION</code> operator to append our own arbitrary query. However, before extracting data from our true target (the <code>users</code> table), we must satisfy the structural rules of the database: matching the exact column count and ensuring data types are string-compatible.</p>
+                <p>After validating that the backend query returns compatible structures, we will point our appended query to pull credentials. The database will merge the results, displaying sensitive data directly on the web interface.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779358438/Screenshot_2026-05-21_14_47_08_bde61q.png">
+            <div>
+                <p>1. <strong>Locate Entry Point:</strong> Access the application home page and click on any category filter. The URL will update with the target parameter, for example: <code>/filter?category=Gifts</code>.</p>
+                <p>2. <strong>Determine Column Structure:</strong> Clear the original category value in your URL and test for column count using <code>NULL</code> values:
+                <br><code>/filter?category=' UNION SELECT NULL,NULL--</code>
+                <br>The server returns a clean <code>200 OK</code> response, proving that the native query handles exactly **two columns**.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779358439/Screenshot_2026-05-21_14_54_29_f3tlfp.png">
+            <div>
+                <p>3. <strong>Verify Data Type Compatibility:</strong> To confirm that both columns accept text data types, update the query placeholders with string data:
+                <br><code>/filter?category=' UNION SELECT 'a','a'--</code>
+                <br>The page loads without an error, confirming that both column positions are fully capable of printing string values to the page layout.</p>
+                <p>4. <strong>Exfiltrate Target Credentials:</strong> Now that the structure is validated, replace the placeholders with your targeted column and table layout names:
+                <br><code>/filter?category=' UNION SELECT username,password FROM users--</code></p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779358438/Screenshot_2026-05-21_14_56_05_b6dzsw.png">
+            <div>
+                <p>5. <strong>Harvest the Credentials:</strong> Submit the finalized payload request. Scroll through the page output; you will see a list of usernames and passwords appended alongside the normal product entries. Locate the entry for the <code>administrator</code> account and copy its corresponding password hash string.</p>
+                <p>6. <strong>Log in and Solve:</strong> Click on "My account" in the navigation menu. Input the username <code>administrator</code> and paste the password you recovered. Upon successful login, the application will register the lab as solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <div>
+                <p>The backend logic constructs an interpolation sequence similar to this:</p>
+                <p><code>SELECT name, description FROM products WHERE category = '' UNION SELECT username, password FROM users--'</code></p>
+                <p>Because the <code>UNION</code> operator demands an exact matching blueprint across query results, using <code>'a','a'</code> allowed us to safely verify the column maps before requesting true values. When the database engine processes our final statement, it joins rows from the <code>users</code> table into the output data stream, forcing the application's presentation templates to cleanly print out administrative credentials directly to the browser view.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Enforce Parameterization:</strong> Stop constructing query strings dynamically via variable interpolation. Use strongly typed prepared statement interfaces to handle arguments cleanly as parameter inputs rather than executable structural blocks.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Apply Strict Routing Whitelists:</strong> Enforce strict structural pattern checks or explicit allow-lists on incoming URL parameter variables on the application routing tier, dropping requests that carry illegal characters like single quotes.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Database Hardening:</strong> Configure explicit database permission limitations to isolate access layers, ensuring that web service application sessions only carry read privileges for specific operational tables, not sensitive configuration structures.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection UNION attack, retrieving data from other tables";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

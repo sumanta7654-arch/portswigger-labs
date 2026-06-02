@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | Listing the Database Contents on Non-Oracle Databases</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779619048/Screenshot_2026-05-24_15_11_04_nvvqp4.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. The query results are rendered directly in the application's response, making it vulnerable to a <code>UNION</code> attack. To capture credentials, we must first discover the schema layout because the database utilizes randomized table and column configurations.</p>
+                <p>Goal: Enumerate the database tracking architecture using metadata tables, isolate the randomized user credentials table, extract the columns, and log in as the <code>administrator</code>.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779619048/Screenshot_2026-05-24_15_35_15_euhzto.png">
+            <div>
+                <p>In real-world penetration testing, table names are rarely as simple as <code>users</code> or columns as predictable as <code>username</code> and <code>password</code>. When application builders scramble identifiers, we must look for a standardized metadata registry.</p>
+                <p>On non-Oracle relational database management systems (RDBMS) like PostgreSQL, MySQL, and Microsoft SQL Server, this structural directory is known as the <strong>Information Schema</strong>. Our strategy is to query <code>information_schema.tables</code> to find the custom user storage tables, then query <code>information_schema.columns</code> to retrieve the randomized field names, and finally execute a precision <code>UNION</code> attack to exfiltrate the administrative secrets.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779619043/Screenshot_2026-05-24_15_35_34_nkhcn8.png">
+            <div>
+                <p>1. <strong>Map Basic Dimensions:</strong> Access the application and click on any category filter. Perform standard structural reconnaissance using <code>' UNION SELECT NULL,NULL--</code>. The application resolves with an HTTP 200 OK statement, confirming the target framework returns exactly <strong>two columns</strong>, and structural validation verifies both support string injections.</p>
+                <p>2. <strong>Enumerate Table Schemas:</strong> Since we need to look up table configurations, query the global metadata views. To filter out noise and internal system definitions, specify the scope context using the <code>public</code> table schema constraint parameter:</p>
+                <p><code>/filter?category=' UNION SELECT NULL,table_name FROM information_schema.tables WHERE table_schema='public'--</code></p>
+                <p>Examine the printed list rows to isolate the unique user dictionary signature name; in this tracking iteration, it reveals itself as <code>users_tdzuuv</code>.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779619052/Screenshot_2026-05-24_15_35_45_nbj79n.png">
+            <div>
+                <p>3. <strong>Enumerate Columns:</strong> Now that we hold the table identifier token, query the column directory view to find out exactly how the individual tracking arrays are named. Filter the database scope explicitly matching your discovered user table string:</p>
+                <p><code>/filter?category=' UNION SELECT NULL,column_name FROM information_schema.columns WHERE table_name='users_tdzuuv'--</code></p>
+                <p>Analyze the returned results. The page structure outputs three matching columns inside the targeted map scope: <code>email</code>, <code>username_esxoqq</code>, and <code>password_fnmwit</code>.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779619045/Screenshot_2026-05-24_15_35_59_rznywd.png">
+            <div>
+                <p>4. <strong>Exfiltrate Targeted Data:</strong> With the exact mapping keys for both table and columns discovered, replace your placeholder selectors with these specific fields to extract the raw credentials stream directly from storage:</p>
+                <p><code>/filter?category=' UNION SELECT username_esxoqq,password_fnmwit FROM users_tdzuuv--</code></p>
+                <p>5. <strong>Authenticate and Complete:</strong> Read through the printed response content rows in your browser viewport. Locate the <code>administrator</code> row entry profile and copy its corresponding string hash. Navigate to "My account," insert the admin user ID along with the extracted string token, and submit to mark the lab module tracking solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <div>
+                <p>Most relational database engines feature a standardized set of read-only views collectively referred to as the <strong>Information Schema</strong>. Whenever user operations input unstructured inputs into raw statement blocks, it permits attackers to dynamically extract the database's own structural dictionary mapping data.</p>
+                <p>By filtering structural query layouts against the <code>table_schema='public'</code> context variable, we can filter out complex engine configurations and narrow our scope down to user-created elements. Since our structural verification checks proved that both columns accept text data types, we can skip string formatting tricks and extract the target parameters simultaneously across the single unified output block layout loop.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Enforce Parameterization:</strong> Stop constructing SQL strings dynamically through string concatenation or interpolation models. Mandate prepared queries with strongly-bound data objects to prevent user strings from shifting the underlying relational structures.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Restrict Metadata System Privileges:</strong> Tighten backend service database operational rules. Ensure the application session's account profile does not hold global read permissions over systemic meta directories such as <code>information_schema.tables</code> or <code>information_schema.columns</code>.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Leverage Application Layer Object Abstraction:</strong> Utilize secure Object-Relational Mapping (ORM) tools that manage state interaction pipelines securely. This ensures that parameter structures are checked and safely isolated at runtime before executing calls against database entities.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection attack, listing the database contents on non-Oracle databases";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

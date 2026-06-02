@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | UNION Attack, Finding a Column Containing Text</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779282473/Screenshot_From_2026-05-20_18-10-42_fvjcdj.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. The results from the query are returned in the application's response, allowing a <code>UNION</code> attack to exfiltrate data. Building on previous techniques to find the column count, the objective here is to identify which column can hold string/text data.</p>
+                <p>Goal: Determine which column is compatible with string data, then inject a <code>UNION SELECT</code> payload that returns a specific database-provided random string to solve the lab.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779282472/Screenshot_From_2026-05-20_18-16-49_lpnqm1.png">
+            <div>
+                <p>When executing a <code>UNION</code> attack, matching the column count is only the first step. The database will still throw an error if the data types of the injected columns do not match the data types of the original query columns.</p>
+                <p>Our strategy is to systematically test individual columns by placing a test string (like <code>'A'</code>) into each position one at a time while keeping the other placeholders as <code>NULL</code>. Once a column accepts the string without throwing a 500 Internal Server Error, we have found our target container for data exfiltration.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779282472/Screenshot_From_2026-05-20_18-16-30_dyguc2.png">
+            <div>
+                <p>1. <strong>Determine Column Count:</strong> Access the lab and click on any category filter. Test the column count using <code>NULL</code> values in the URL. By sending <code>' UNION SELECT NULL,NULL,NULL--</code> and receiving a <code>200 OK</code> response, you confirm that the query handles exactly **three columns**.</p>
+                <p>2. <strong>Test the First Column for Strings:</strong> Replace the first <code>NULL</code> placeholder with a text literal character <code>'A'</code>:
+                <br><code>/filter?category=' UNION SELECT 'A',NULL,NULL--</code>
+                <br>Send the request. If the server throws an error, the first column does not support string data types.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779282473/Screenshot_From_2026-05-20_18-19-06_bg3bpj.png">
+            <div>
+                <p>3. <strong>Test the Second Column for Strings:</strong> Shift the text literal to the second position:
+                <br><code>/filter?category=' UNION SELECT NULL,'A',NULL--</code>
+                <br>Send the request. The application renders the page successfully without errors, indicating that the **second column is compatible with text data**.</p>
+                <p>4. <strong>Inject the Required Value:</strong> Note the unique tracking string provided at the top of the lab description page. Replace our test character <code>'A'</code> with this exact target string:
+                <br><code>/filter?category=' UNION SELECT NULL,'X0Y1Z2...',NULL--</code></p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779282472/Screenshot_From_2026-05-20_18-23-10_myxy14.png">
+            <div>
+                <p>5. <strong>Verify the Exploit:</strong> Submit the finalized payload request. The application will append a new row containing your tracking token to the visible page results, confirming successful execution and solving the lab.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <div>
+                <p>A <code>UNION</code> operation combines result sets from multiple queries into a single output table. SQL standards dictate that corresponding columns across joined queries must share compatible data types (e.g., trying to fit a string into an integer field will trigger an allocation crash). By systematically replacing neutral <code>NULL</code> values with explicit string structures, we trace the schema layout dynamically. The successful injection demonstrates that the backend column structure maps cleanly onto text fields.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Parameterized Statements:</strong> Implement strongly typed prepared statements to prevent user input from being executed as structural query commands.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Input Sanitization and Validation:</strong> Implement an explicit allow-list for category variables on the server-side router to drop unexpected punctuation indicators like single quotes (<code>'</code>).</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Disable Detailed Database Errors:</strong> Ensure production configurations suppress raw execution errors, preventing attackers from gaining structural clues during exploitation attempts.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection UNION attack, finding a column containing text";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

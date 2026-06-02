@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | UNION Attack, Determining Column Count</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779279520/Screenshot_From_2026-05-20_16-43-26_crluzf.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. The results from the query are returned in the application's response, making it vulnerable to a <code>UNION</code> attack. However, before executing a full data exfiltration exploit, we must find out how many columns the original query returns.</p>
+                <p>Goal: Determine the exact number of columns returned by the query by injecting a series of <code>UNION SELECT</code> payloads containing <code>NULL</code> values.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779279520/Screenshot_From_2026-05-20_17-06-39_lgh9c7.png">
+            <div>
+                <p>When executing an SQL injection <code>UNION</code> attack, there are two strict technical requirements enforced by the database engine:</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The injected <code>UNION SELECT</code> statement must return the <strong>exact same number of columns</strong> as the original query.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The <strong>data types</strong> of the columns must be compatible across both queries.</p>
+                <p>Our strategy is to systematically test the column structure by passing arrays of <code>NULL</code> values. We use <code>NULL</code> because it is accepted as a valid placeholder for almost any data type (strings, integers, booleans), which helps us isolate the column count without triggering data-type errors prematurely.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779279520/Screenshot_From_2026-05-20_17-06-39_lgh9c7.png">
+            <div>
+                <p>1. <strong>Locate the Injection Vector:</strong> Access the lab home page. To find a parameter interacting with the database, click on any filter category (e.g., <code>Pets</code> or <code>Accessories</code>). Observe the URL structure changes to: <code>/filter?category=Pets</code>.</p>
+                <p>2. <strong>Test with Two Columns:</strong> Clear the original category value from the URL and inject two null placeholders:
+                <br><code>/filter?category=' UNION SELECT NULL,NULL--</code>
+                <br>Send the request. The server returns an <strong>HTTP 500 Internal Server Error</strong>, proving the column count does not equal 2.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779279520/Screenshot_From_2026-05-20_17-17-09_ntkfop.png">
+            <div>
+                <p>3. <strong>Test with Three Columns:</strong> Increment the count by adding a third null placeholder to the parameter:
+                <br><code>/filter?category=' UNION SELECT NULL,NULL,NULL--</code></p>
+                <p>4. <strong>Analyze the Successful Response:</strong> Send the modified payload. The server processes the request cleanly, returning an HTTP 200 OK without any structural errors. This confirms the backend table query handles exactly three columns.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <div>
+                <p>5. <strong>Verify Success:</strong> Because your payload perfectly matched the column structure, the web application successfully resolves the execution. The lab banner changes to solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <div>
+                <p>When the query executes on the database backend, it resolves into a structure similar to this:</p>
+                <p><code>SELECT name, description, price FROM products WHERE category = '' UNION SELECT NULL, NULL, NULL--'</code></p>
+                <p>If the count of elements in our injected <code>SELECT</code> block differs from the initial query execution block, the database engine drops the query processing entirely and throws a fatal compilation error (resulting in the application's 500 Internal Error response). Once we match the exact column tally, the dataset joins cleanly. The trailing <code>--</code> syntax forces the engine engine to truncate the rest of the application's native verification block.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Implement Parameterization:</strong> Use prepared statement routing frameworks to pass variables separately from structural statement strings, preventing the interpolation of user-supplied commands like <code>UNION</code>.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Object Relational Mapping (ORM):</strong> Abstract underlying relational architecture using modernized ORM structures (like Hibernate or Entity Framework) that isolate programmatic parameters safely.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Deploy Web Application Firewalls (WAF):</strong> Configure network inspection policies to actively identify and drop structural query parameters containing raw signature syntax variants like <code>UNION SELECT</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection UNION attack, determining the number of columns returned by the query";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | Listing the Database Contents on Oracle</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779622307/Screenshot_2026-05-24_16_19_44_frclq9.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. The results from the query are returned in the application's response, allowing a <code>UNION</code> attack to retrieve data from other tables. Since the application database uses randomized table and column configurations on an Oracle infrastructure, we must map out the system schema before we can extract credentials.</p>
+                <p>Goal: Enumerate the Oracle database structure to locate the randomized user credentials table, extract its dynamic columns, and log in as the <code>administrator</code> user.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779622305/Screenshot_2026-05-24_16_25_08_omlgab.png">
+            <div>
+                <p>When mapping database architecture on an <strong>Oracle</strong> backend, we cannot use <code>information_schema</code> because Oracle does not support it. Instead, Oracle uses its own specific metadata views to track objects.</p>
+                <p>Our strategy relies on two main Oracle data dictionary views:</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>all_tables</code>: To retrieve a list of all tables accessible to our database session.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>all_tab_columns</code>: To retrieve a list of all columns mapped to our target table.</p>
+                <p>Remember that Oracle strictly requires a <code>FROM</code> clause for all queries. We must also ensure that table names passed into metadata filters are completely capitalized because Oracle handles identifiers as uppercase strings by default.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779622309/Screenshot_2026-05-24_16_26_21_h19lef.png">
+            <div>
+                <p>1. <strong>Determine Column Configuration:</strong> Access the lab and click on any category filter. Perform column and type verification using: 
+                <br><code>/filter?category=' UNION SELECT 'a','a' FROM dual--</code>
+                <br>The application returns an HTTP 200 OK without errors, confirming that the backend query returns exactly **two columns**, and both are fully compatible with string data types.</p>
+                <p>2. <strong>Enumerate Table Structure:</strong> Query Oracle's global table tracking index to look up available user tables. Remember to append the required <code>FROM</code> statement pointing to <code>all_tables</code>:</p>
+                <p><code>/filter?category=' UNION SELECT NULL,table_name FROM all_tables--</code></p>
+                <p>Analyze the returned list. Scroll down past the default Oracle system tables until you spot a highly interesting, randomized user table signature: <code>USERS_JSLKCH</code>.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779622309/Screenshot_2026-05-24_16_38_13_hfuvs6.png">
+            <div>
+                <p>3. <strong>Enumerate Column Mapping:</strong> To discover the randomized column definitions within our newly discovered table, query the metadata view <code>all_tab_columns</code>. Ensure you filter the search using the exact uppercase table name:</p>
+                <p><code>/filter?category=' UNION SELECT NULL,column_name FROM all_tab_columns WHERE table_name='USERS_JSLKCH'--</code></p>
+                <p>4. <strong>Identify Target Fields:</strong> Examine the UI layout output rows. You will identify three specific custom column markers containing core details: <code>EMAIL</code>, <code>USERNAME_TEQXXU</code>, and <code>PASSWORD_WSFNXH</code>.</p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779622307/Screenshot_2026-05-24_16_52_41_tdwois.png">
+            <div>
+                <p>5. <strong>Exfiltrate Sensitive Credentials:</strong> Now that both the table name and column keys are fully mapped, modify the placeholders to target these specific values directly:</p>
+                <p><code>/filter?category=' UNION SELECT PASSWORD_WSFNXH,USERNAME_TEQXXU FROM USERS_JSLKCH--</code></p>
+                <p>6. <strong>Log in and Complete:</strong> Read through the printed response content lines. Locate the row profile corresponding to the <code>administrator</code> user and extract the plain-text password. Navigate to "My account" in the menu bar, log in with these credentials, and the lab will instantly mark itself as solved.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779622307/Screenshot_2026-05-24_16_53_09_f3ltvx.png">
+            <div>
+                <p>The backend core takes input arguments and builds an unvalidated execution block:</p>
+                <p><code>SELECT item, description FROM products WHERE category = '' UNION SELECT PASSWORD_WSFNXH, USERNAME_TEQXXU FROM USERS_JSLKCH--'</code></p>
+                <p>In an Oracle architecture environment, system objects are registered in system catalog views. By invoking a <code>UNION</code> selection loop over <code>all_tables</code> and <code>all_tab_columns</code>, an attacker can trace database schemas step-by-step. Because Oracle stores metadata table arguments using uppercase text strings by default, passing <code>table_name='USERS_JSLKCH'</code> in strict uppercase ensures our filter clause returns a match, allowing us to successfully exfiltrate the administrative credentials dataset.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Deploy Strongly Parameterized Queries:</strong> Ensure all incoming user parameter inputs are bound cleanly via prepared statement engines, preventing raw input strings from altering query structure.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Restrict Catalog Views Access:</strong> Implement strict database permissions to restrict access to system catalogs. Make sure the application database user account cannot read data dictionary tables like <code>all_tables</code> or <code>all_tab_columns</code>.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Enforce Input Field Sanitization:</strong> Implement server-side verification filters using rigid alphanumeric character validation schemas to inspect and discard payloads containing relational operator structures or trailing SQL comment sequences like <code>--</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection attack, listing the database contents on Oracle";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

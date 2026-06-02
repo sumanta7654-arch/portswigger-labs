@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | UNION Attack, Retrieving Multiple Values in a Single Column</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779360522/Screenshot_2026-05-21_15_54_19_t3jyct.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. While the application's underlying query returns multiple columns, only a single column's content is actually rendered and displayed on the web page. This prevents a standard multi-column data extraction.</p>
+                <p>Goal: Combine multiple sensitive values into a single string using database-specific concatenation operators, bypass the display limitation to extract credentials from the <code>users</code> table, and log in as <code>administrator</code>.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779360517/Screenshot_2026-05-21_15_54_45_w4zh60.png">
+            <div>
+                <p>During a <code>UNION</code> attack, you might discover that a query returns multiple columns (e.g., two columns), but testing with test strings reveals that only one column's data actually gets printed to the UI layout. If we try to fetch <code>username</code> in the hidden column and <code>password</code> in the visible column, we will only see the passwords.</p>
+                <p>Our strategy is to use <strong>String Concatenation</strong>. Instead of selecting fields into separate columns, we merge the <code>username</code> and <code>password</code> fields into a single text block, separated by a distinct delimiter character like a colon (<code>:</code>). This allows us to funnel all our targeted data through the single visible UI container.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779360641/Screenshot_2026-05-21_15_55_12_zyhohr.png">
+            <div>
+                <p>1. <strong>Map the Parameter Entry:</strong> Navigate to the web application home page and click on any category filter link. Observe the URL parameter populate: <code>/filter?category=Pets</code>.</p>
+                <p>2. <strong>Determine Display Architecture:</strong> Test the column map count and visibility structure. Injecting <code>' UNION SELECT NULL,'a'--</code> loads cleanly and renders the character <code>'a'</code> on screen, proving that the native query handles **two columns**, but **only the second column is visible** in the application interface template.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779360522/Screenshot_2026-05-21_15_59_37_ui07nz.png">
+            <div>
+                <p>3. <strong>Inject Concatenation Payload:</strong> Because we need to extract both credentials using only the second column, construct a query concatenation using the standard SQL pipelining operators (<code>||</code>):
+                <br><code>/filter?category=' UNION SELECT NULL,username || ' : ' || password FROM users--</code></p>
+                <p>4. <strong>Alternative Database Format Check:</strong> If the database flavor uses MySQL or a standard function routing matrix instead of pipelines, deploy the alternative functional equivalent structure:
+                <br><code>/filter?category=' UNION SELECT NULL,CONCAT(username,' : ', password) FROM users--</code></p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779360518/Screenshot_2026-05-21_16_11_15_yjwky9.png">
+            <div>
+                <p>5. <strong>Harvest the Concatenated Output:</strong> Submit the request payload and examine the rendered layout rows. You will see credential lines cleanly printed as <code>username : password</code> strings. Locate the entry for the <code>administrator</code> user and extract the plain-text password value.</p>
+                <p>6. <strong>Log in and Complete:</strong> Go to the account authorization menu dashboard via "My account". Enter <code>administrator</code> along with the extracted credential string. Submitting this valid set solves the lab tracking vector.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779360517/Screenshot_2026-05-21_16_14_28_pmhirw.png">
+            <div>
+                <p>The web service parses incoming parameters directly into an unparameterized backend database engine statement:</p>
+                <p><code>SELECT id, description FROM products WHERE category = '' UNION SELECT NULL, username || ' : ' || password FROM users--'</code></p>
+                <p>Even though the template code ignores the first retrieved column database value entirely during UI processing loops, our string concatenation manipulation allows us to condense a multi-column target payload signature down into a single returned field layout structure. The pipeline syntax (<code>||</code>) instructs the database processor to join distinct string fields together sequentially before returning the output dataset records to the server core.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Use Parameterized Statements:</strong> Implement strongly typed prepared query execution drivers to handle query arguments separately from structural commands, neutralizing characters like pipelines and single quotes.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Implement Context-Aware Input Validation:</strong> Set up robust validation filters or strict character allow-lists on structural query parameters on the routing layer to automatically reject execution vectors containing relational syntax flags.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Enforce Least Privilege Controls:</strong> Configure granular database permission structures to restrict application service credentials from reading administrative tables like <code>users</code> entirely.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection UNION attack, retrieving multiple values in a single column";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

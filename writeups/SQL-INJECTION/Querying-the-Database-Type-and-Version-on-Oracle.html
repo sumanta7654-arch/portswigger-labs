@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SQL Injection | Querying the Database Type and Version on Oracle</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+
+<body>
+    <nav>
+        <h2 class="logo">Sumanta</h2>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../writeups.html">All Writeups</a></li>
+        </ul>
+    </nav>
+
+    <div class="writeup-container">
+
+        <h1 id="typing-title"></h1>
+        <p class="meta">SQL Injection | Practitioner</p>
+        <h2 class="section-title">Lab Description</h2>
+
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779456780/Screenshot_2026-05-22_18_12_02_bnxtf5.png">
+            <div>
+                <p>This lab contains an SQL injection vulnerability in the product category filter. The results from the query are returned in the application's response, allowing a <code>UNION</code> attack to retrieve data from other tables. To extract information effectively, we need to identify the database type and its version tracking specifications.</p>
+                <p>Goal: Determine that the database type is Oracle, map out its column architecture, and execute a query that exfiltrates the database version string using the system table.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Mindset & Strategy</h2>
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779456779/Screenshot_2026-05-22_18_20_01_dhw821.png">
+            <div>
+                <p>Unlike other database engines (such as MySQL or PostgreSQL), <strong>Oracle Database</strong> enforces a strict syntax requirement: every <code>SELECT</code> statement <strong>MUST</strong> include a <code>FROM</code> clause pointing to a valid table.</p>
+                <p>If we try to inject a standard payload like <code>' UNION SELECT NULL,NULL--</code>, Oracle will throw an error because the table source is missing. To enumerate columns safely on Oracle, we must explicitly query a built-in system table. We can attempt to use Oracle's default dummy table, <code>dual</code>, or target the version tracking architecture directly via the <code>v$version</code> dictionary view.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Step-By-Step-Execution</h2>
+        <div class="feed left reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779456780/Screenshot_2026-05-22_18_54_12_grqnez.png">
+            <div>
+                <p>1. <strong>Locate Entry Vector:</strong> Go to the application home screen and click on any available category filter. Your browser URL parameter query string will populate with an entry like: <code>/filter?category=Gifts</code>.</p>
+                <p>2. <strong>Understand Oracle Column Mapping:</strong> Because Oracle demands a <code>FROM</code> statement, an entry missing a table target will fail. If you try to map column arrays using the built-in single-row placeholder table via <code>' UNION SELECT NULL,NULL FROM dual--</code>, configuration constraints might drop the session depending on context. Instead, we can pivot directly to the core version tracking environment table: <code>v$version</code>.</p>
+            </div>
+        </div>
+
+        <div class="feed right reveal">
+            <img src="https://res.cloudinary.com/dyeouti4d/image/upload/v1779456780/Screenshot_2026-05-22_18_55_20_rx0nj1.png">
+            <div>
+                <p>3. <strong>Enumerate Columns on System Table:</strong> Systematically trace the column count by adding <code>NULL</code> instances pointing to the version table view parameter link:
+                <br><code>/filter?category=' UNION SELECT NULL,NULL FROM v$version--</code>
+                <br>Send the query request. The page resolves into a clean HTTP <code>200 OK</code> statement response, confirming that the backend database operation handles exactly **two columns**.</p>
+                <p>4. <strong>Exfiltrate the Target Version:</strong> In Oracle databases, the version text string information is stored within a specific column identifier named <code>banner</code>. Replace one of the validated <code>NULL</code> placeholders with this target column key:
+                <br><code>/filter?category=' UNION SELECT NULL,banner FROM v$version--</code></p>
+            </div>
+        </div>
+
+        <div class="feed left reveal">
+            <div>
+                <p>5. <strong>Verify the Solution:</strong> Submit the completed request URL block payload. Examine the visible web layout list rows. The engine will render the internal Oracle software build version text content directly onto the application page template layout, solving the lab tracking module.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Technical Explanation</h2>
+        <div class="feed right reveal">
+            <div>
+                <p>The web portal dynamically interpolates parameters into an unvalidated database instruction layer:</p>
+                <p><code>SELECT name, description FROM products WHERE category = '' UNION SELECT NULL, banner FROM v$version--'</code></p>
+                <p>Oracle's strict language validation parsing rules state that omitting a <code>FROM</code> destination triggers a fatal syntax exception. While the <code>dual</code> table is a global dummy table used for executing independent constants, targeting the built-in dynamic performance view <code>v$version</code> allows us to achieve two things simultaneously: fulfilling the structural requirements of the <code>FROM</code> keyword and gaining access to the <code>banner</code> column where system release information is exposed.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">How To Fix</h2>
+        <div class="feed left">
+            <div>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Deploy Parameterized Prepared Queries:</strong> Transition application queries to parameterized interfaces. Binding database parameters ensures the runtime handles inputs strictly as literal data objects, preventing string adjustments from breaking out into structural commands.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Restrict Data Dictionary Access:</strong> Harden database configurations by applying strict access controls to dictionary views. Restrict public read access to system views like <code>v$version</code> or <code>all_tables</code> to stop unauthorized users from mapping system architecture.</p>
+                <p>°&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Implement Strict Input Whitelisting:</strong> Validate incoming routing parameters against a strict alphanumeric allow-list on the server, automatically dropping any input containing structural keywords or relational operators like <code>UNION</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen" onclick="closeImage()">
+        <span class="close-btn">✕</span>
+        <img id="full-img">
+    </div>
+
+    <script>
+        const titleText = "Lab: SQL injection attack, querying the database type and version on Oracle";
+        let i = 0;
+        function typeTitle() {
+            if (i < titleText.length) {
+                document.getElementById("typing-title").innerHTML += titleText.charAt(i);
+                i++;
+                setTimeout(typeTitle, 40);
+            }
+        }
+        window.addEventListener("load", typeTitle);
+
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 80) {
+                    el.classList.add("active");
+                }
+            });
+        }
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+
+        document.querySelectorAll(".feed img").forEach(img => {
+            img.addEventListener("click", function () {
+                document.getElementById("fullscreen").style.display = "flex";
+                document.getElementById("full-img").src = this.src;
+            });
+        });
+
+        function closeImage() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+    </script>
+</body>
+</html>
